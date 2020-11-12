@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\core.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+    <Protobuf Include="Protos\security.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+    <Protobuf Include="Protos\ownership.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+    <Protobuf Include="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+    <Protobuf Include="Protos\calculations.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+    <Protobuf Include="Protos\workspace.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapr.Actors" Version="0.11.0-preview02" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.29.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- extends watching group to include ./Protos/*.proto files -->
+    <Watch Include="./Protos/*.proto" />
+  </ItemGroup>
+
+</Project>

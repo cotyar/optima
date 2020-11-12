@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option csharp_namespace = "Optima.Domain.Security";
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+import public "core.proto";
+
+package security;
+
+message User {
+  core.UUID                 id          = 1;
+  string                    name        = 2;
+  google.protobuf.Timestamp createdAt   = 3; 
+}
+
+message Role {
+  core.UUID                 id          = 1;
+  string                    name        = 2;
+  google.protobuf.Timestamp createdAt   = 3; 
+}
+
+message Principal {
+  oneof kind {
+      User user = 1;
+      Role role = 2;
+  }
+}
+
+enum PermissionType {
+  NONE       = 0;
+  READ       = 1;
+  CREATE_NEW = 2;
+}
+
+message Permissions {
+  message PrincipalPermissions {
+    Principal               principal = 1;
+    repeated PermissionType allowed   = 2;
+  }
+
+  repeated PrincipalPermissions perPrincipal = 1;
+}
+
+message PrincipalApproval {
+  core.UUID                 id         = 1;
+  security.Principal        approvedBy = 2;
+  google.protobuf.Timestamp approvedAt = 3;
+  string                    comment    = 4;
+}

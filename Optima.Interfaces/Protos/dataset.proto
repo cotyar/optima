@@ -1,0 +1,202 @@
+syntax = "proto3";
+
+option csharp_namespace = "Optima.Domain.DatasetDefinition";
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+import public "google/protobuf/descriptor.proto";
+
+import public "ownership.proto";
+
+package dataset;
+
+message DatasetId {
+  string uid = 1;
+}
+
+message DatasetState {
+  message Creating {
+    google.protobuf.Timestamp   submittedAt = 1;
+  }
+  message Curating {
+    google.protobuf.Timestamp   submittedAt = 1;
+  }
+  message InControlsValidation {
+    google.protobuf.Timestamp   submittedAt  = 1;
+  }
+  message Governed {
+    google.protobuf.Timestamp   approvedAt  = 1;
+  }
+
+  oneof state {
+    Creating                creating = 1;
+    google.protobuf.Empty   private  = 2;
+    InControlsValidation    controls = 3;
+    Curating                curating = 4;
+    Governed                governed = 5;
+  }
+}
+
+message DatasetSchema {
+  google.protobuf.FileDescriptorSet descriptor        = 1; // TODO: verify if all of them should be actually populated or one is enough
+  string                            protoFile         = 2;
+  string                            descriptorEncoded = 3;
+}
+
+message DatasetInfo {
+  enum PersistenceType
+  {
+    Memory  = 0;
+    RocksDb = 1;
+    Parquet = 2;
+  }
+
+  DatasetId       id            = 1;
+  string          name          = 2;
+  DatasetMetadata metadata      = 3;
+  DatasetSchema   schema        = 4;
+
+  PersistenceType persistedTo   = 20;
+
+  DatasetState    datasetState  = 100;
+}
+
+message DatasetMetadata {
+  message Rating {
+    enum Stars {
+      ZERO  = 0;
+      ONE   = 1;
+      TWO   = 2;
+      THREE = 3;
+      FOUR  = 4;
+      FIVE  = 5;
+    }
+    Stars stars = 1;
+  }
+
+  message Comment {
+    security.User               user        = 1;
+    string                      comment     = 2;
+    Rating                      rating      = 3;
+    google.protobuf.Timestamp   createdAt   = 5;
+  }
+
+  message Tag {
+    enum Category {
+      DEFAULT         = 0;
+      DATASET_NAME    = 1;
+      ON_PREM         = 2;
+      CLOUD           = 3;
+      PROD            = 4;
+    }
+    string      tag      = 1;
+    Category    category = 2;
+  }
+
+  DatasetId                   datasetId   = 1;
+  ownership.DatasetOwner      owner       = 3;
+  security.User               createdBy   = 4;
+  google.protobuf.Timestamp   createdAt   = 5; 
+  uint32                      size        = 6;
+  string                      description = 7;
+  Rating                      rating      = 8;
+  repeated Comment            comments    = 9;
+  repeated Tag                tags        = 10;
+}
+
+message DatasetAccessToken {
+  string token = 1; // JWT
+}
+
+message DatasetGroup {
+  DatasetId             id          = 1;
+  string                name        = 2;
+  repeated DatasetId    datasets    = 3;
+}
+
+
+message Dataset {
+  DatasetId      id    = 1;
+  string         name  = 2;
+
+  security.Permissions                          permissions             = 200;
+  ownership.DatasetOwner                        owner                   = 201;
+  ownership.DatasetOwnerHistory                 ownershipAudit          = 202;
+  repeated ownership.OwnerAuthorizationResponse ownerAuthorizationAudit = 203;
+
+  oneof state {
+    DatasetInfo  single = 10;
+    DatasetGroup group  = 11;
+  }
+}
+
+
+message PersistenceType
+{
+  message MemoryDatasetInfo {
+  }
+
+  message FileDatasetInfo {
+    enum FileFormat {
+      Binary  = 0;
+      Text    = 1;
+      Csv     = 2;
+      Json    = 3;
+      Xml     = 4;
+      Parquet = 5;
+      RocksDb = 6;
+    }
+
+    string      path          = 1;
+    FileFormat  fileFormat    = 2;
+    bool        isDirectory   = 3;
+    bool        isAppendable  = 4;
+  }
+
+  message DbDatasetInfo {
+    enum DbProvider {
+      Postgres    = 0;
+      Oracle      = 1;
+      SqlServer   = 2;
+      Materialize = 3;
+    }
+
+    DbProvider  dbProvider     = 1;
+    string      dbProviderName = 2;
+    string      databaseName   = 3;
+    string      query          = 4;
+  }
+
+  message HiveDatasetInfo {
+    enum DbProvider {
+      Hive        = 0;
+      Impala      = 1;
+      // Druid       = 2; // TODO: Or put it into the DB section?
+    }
+
+    DbProvider  dbProvider     = 1;
+    string      dbProviderName = 2;
+    string      databaseName   = 3;
+    string      query          = 4;
+  }
+
+  message SparkDatasetInfo {
+    enum DbProvider {
+      OpenSource  = 0;
+      DataBricks  = 1;
+    }
+
+    DbProvider  dbProvider     = 1;
+    string      dbProviderName = 2;
+    string      databaseName   = 3;
+    string      query          = 4;
+  }
+
+  oneof persistence {
+    MemoryDatasetInfo memory  = 1;
+    FileDatasetInfo   disk    = 2;
+    DbDatasetInfo     db      = 3;
+    HiveDatasetInfo   hive    = 4;
+  }
+}
+

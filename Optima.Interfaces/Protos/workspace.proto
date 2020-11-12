@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "Optima.Domain.Workspace";
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+import public "dataset.proto";
+import public "calculations.proto";
+
+package workspace;
+
+message Sandbox {
+	security.Principal                          owner                = 1;
+	
+	dataset.DatasetGroup                        global               = 2;
+	dataset.DatasetGroup                        stashed              = 3;
+	dataset.DatasetGroup                        pendingValidation    = 4;
+
+	repeated calculations.CalculatorDefinition  availableCalculators = 5;
+}

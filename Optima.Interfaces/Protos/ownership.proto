@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option csharp_namespace = "Optima.Domain.Ownership";
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+import public "core.proto";
+import public "security.proto";
+
+package ownership;
+
+message DatasetOwner {
+  security.Principal        owner       = 1;
+  google.protobuf.Timestamp assignedAt  = 2;
+}
+
+message DatasetOwnerHistory {
+  message Entry {
+    repeated security.Principal owner       = 1;
+    google.protobuf.Timestamp   assignedAt  = 2;
+  }
+  repeated DatasetOwnerHistory entries = 1;
+}
+
+message OwnerAuthorizationRequest {
+  core.UUID                           id            = 1;
+  security.Principal                  requestedFor  = 2;
+  security.User                       requestedBy   = 3;
+  google.protobuf.Timestamp           requestedAt   = 4;
+  string                              justification = 5;
+  repeated security.PrincipalApproval approvals     = 6; 
+}
+
+message OwnerAuthorizationResponse {
+  message Approved {
+    google.protobuf.Timestamp   submittedAt = 1;
+    string                      comment     = 2;
+  }
+  message Rejected {
+    google.protobuf.Timestamp   submittedAt = 1;
+    string                      reason      = 4;
+  }
+  oneof state {
+    Approved approved = 1;
+    Rejected rejected  = 2;
+  }
+}

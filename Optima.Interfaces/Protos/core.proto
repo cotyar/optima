@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option csharp_namespace = "Optima.Domain.Core";
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+package core;
+
+message UUID {
+  string id = 1;
+}
+
+

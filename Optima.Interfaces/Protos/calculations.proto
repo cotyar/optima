@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option csharp_namespace = "Optima.Domain.Calculations";
+
+import public "google/protobuf/api.proto";
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+import public "core.proto";
+import public "dataset.proto";
+
+package calculations;
+
+message CalculatorId {
+  string uid  = 1;
+}
+
+message CalculatorSchema {
+  google.protobuf.FileDescriptorSet descriptor        = 1; // TODO: verify if all of them should be actually populated or one is enough
+  string                            protoFile         = 2;
+  string                            descriptorEncoded = 3;
+
+  google.protobuf.Api               api               = 5;
+}
+
+message CalculatorDefinition {
+  CalculatorId                   uid           = 1;
+  CalculatorSchema               api           = 2;
+  repeated dataset.DatasetSchema inputDatasets = 3;
+  repeated dataset.DatasetSchema ouputDatasets = 4;
+}
+
+message DAGNode {
+  core.UUID nodeId = 1;
+}
+
+message DAG {
+  core.UUID         dagId = 1;
+  repeated DAGNode  nodes = 2;
+}
+
+message DAGRegistry {
+  repeated DAG dag = 1;
+}
+
+message DAGExecutionLog {
+  message DAGStatus {
+    message Submitted {
+      google.protobuf.Timestamp   submittedAt = 1;
+    }
+    message Ready {
+      google.protobuf.Timestamp   submittedAt = 1;
+    }
+    message Running {
+      google.protobuf.Timestamp   startedAt   = 1;
+    }
+    message Completed {
+      google.protobuf.Timestamp   completedAt = 1;
+    }
+    message Failed {
+      google.protobuf.Timestamp   failedAt    = 1;
+      string                      reason      = 2; // TODO: Change to "any"?
+    }
+    
+    oneof status {
+      Submitted creating = 1;
+      Ready     private  = 2;
+      Running   controls = 3;
+      Completed curating = 4;
+      Failed    governed = 5;
+    }
+  }
+  
+  message DAGExecutionState {
+    core.UUID dagId   = 1;
+    DAGStatus status  = 2;
+  }
+
+  map<string, DAGExecutionState>  currentState = 1;
+  repeated DAGExecutionState      history      = 2;
+}
+
+

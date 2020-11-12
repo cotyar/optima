@@ -1,0 +1,301 @@
+syntax = "proto3";
+
+option csharp_namespace = "LinNet";
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+package lin;
+
+message DatasetLineage {
+    message LoadedField {
+        FieldDef            field       = 1;
+        LoadedFieldSource   fieldSource = 2;
+    }
+
+    message LoadedFields {
+        repeated LoadedField fields = 1;
+    }
+
+    message DatasetCopy {
+        DatasetLineage dataset                = 1;
+    }
+
+    message FieldProjection {
+        FieldDef from = 1;
+        FieldDef to   = 2;
+
+        string expression = 5; // TODO: Temporal patch
+    }
+
+    message FieldProjections {
+	      DatasetLineage dataset                = 1;
+	      repeated FieldProjection projections  = 2;
+    }
+
+    message RowFilter {
+        DatasetLineage dataset                = 1;
+        repeated RowFilterCondition condition = 2;
+    }
+
+    message Aggregation {
+        AggregationDimension dimension  = 1;
+        AggregationType      type       = 2;
+    }
+
+    message DatasetUnion {
+        repeated DatasetLineage datasets = 1;
+    }
+
+    message DatasetJoin {
+        DatasetId                   dataset     = 1;
+        JoinType                    joinType    = 2;
+        repeated RowFilterCondition condition   = 3;
+    }
+
+    DatasetInfo         dataset = 1; 
+    repeated FieldDef   fields  = 2;
+    //repeated DatasetLineage previousActivities = 100;
+
+    oneof activity {
+        DatasetCopy      copy          = 10;
+        LoadedFields     loadedFields  = 11;
+        FieldProjections projection    = 12;
+        RowFilter        filter        = 13;
+        Aggregation      aggregation   = 14;
+        RowFilter        postAggFilter = 15;
+        DatasetUnion     union         = 16;
+        DatasetJoin      join          = 17;
+    }
+}
+
+message DatasetId {
+    string uid = 1;
+}
+
+message DatasetState {
+    message Creating {
+      google.protobuf.Timestamp   submittedAt = 1;
+    }
+    message Curating {
+	    google.protobuf.Timestamp   submittedAt = 1;
+	  }
+    message InControlsValidation {
+	    google.protobuf.Timestamp   submittedAt  = 1;
+    }
+    message Governed {
+	    google.protobuf.Timestamp   approvedAt  = 1;
+    }
+
+    oneof state {
+        Creating                creating = 1;
+        google.protobuf.Empty   private  = 2;
+        InControlsValidation    controls = 3;
+        Curating                curating = 4;
+        Governed                governed = 5;
+	}
+}
+
+message DatasetInfo {
+    message Rating {
+        enum Stars {
+            ZERO  = 0;
+            ONE   = 1;
+            TWO   = 2;
+            THREE = 3;
+            FOUR  = 4;
+            FIVE  = 5;
+        }
+        Stars stars = 1;
+    }
+    message Comment {
+        User                        user        = 1;
+        string                      comment     = 2;
+        Rating                      rating      = 3;
+        google.protobuf.Timestamp   createdAt   = 5;
+    }
+    
+    message Tag {
+        enum Category {
+            DEFAULT         = 0;
+            DATASET_NAME    = 1;
+            ON_PREM         = 2;
+            CLOUD           = 3;
+            PROD            = 4;
+        }
+        string      tag      = 1;
+        Category    category = 2;
+    }
+
+    enum PersistenceType
+    {
+        Memory  = 0;
+        RocksDb = 1;
+        Parquet = 2;
+    }
+    
+    DatasetId                   datasetId   = 1;
+    string                      name        = 2;
+    User                        owner       = 3;
+    User                        createdBy   = 4;
+    google.protobuf.Timestamp   createdAt   = 5; 
+    uint32                      size        = 6;
+    string                      description = 7;
+    Rating                      rating      = 8;
+    repeated Comment            comments    = 9;
+    repeated Tag                tags        = 10;
+
+    PersistenceType             persistedTo  = 20;
+    
+    DatasetState                datasetState = 100;
+}
+
+enum LoadedFieldSource {
+    Const       = 0;
+    Csv         = 1;
+    Parquet     = 2;
+    Zeus        = 3;
+    Alterix     = 4;
+    Kylegence   = 5;
+    DataFactory = 6;
+}
+
+enum FieldType {
+    String  = 0;
+    Int8    = 1;
+    Int16   = 2;
+    Int32   = 3;
+    Int64   = 4;
+    Float32 = 5;
+    Float64 = 6;
+    Decimal = 7;
+    Boolean = 8;
+}
+
+message FieldDef {
+    string    name          = 1;
+    DatasetId datasetId     = 2;
+    FieldType type          = 3;
+    bool      optionalField = 4;
+    string    defaultValue  = 5;
+}
+
+message RowFilterCondition {
+    string condition = 1; // TODO: Change to some kind of Expression Tree
+}
+
+message AggregationDimension {
+    repeated string fields = 1;
+}
+
+enum AggregationType {
+    SUM        = 0;
+    AVERAGE    = 1;
+    COUNT      = 2;
+    MIN        = 3;
+    MAX        = 4;
+}
+
+enum JoinType {
+    INNER        = 0;
+    LEFT         = 1;
+    RIGHT        = 2;
+    OUTER        = 3;
+    CROSS        = 4;
+}
+
+message DatasetSchema {
+	string descriptor = 1;
+}
+
+message RowLineage {
+	message RowFieldLineage {
+	    repeated FieldDef   parents         = 1;
+	    CalculatorId        calculatorId    = 2;
+        int64               rowId           = 3;
+    }
+
+    map<string, RowFieldLineage> lineage = 1;
+}
+
+message User {
+    string uid  = 1;
+    string name = 2;
+}
+
+message Role {
+	string uid  = 1;
+	string name = 2;
+}
+
+message Principal {
+    oneof kind {
+        User user = 1;
+        Role role = 2;
+	}
+}
+
+enum PermissionType {
+    NONE       = 0;
+    READ       = 1;
+    CREATE_NEW = 2;
+}
+
+message Permissions {
+	message PrincipalPermissions {
+		Principal               principal = 1;
+		repeated PermissionType allowed   = 2;
+	}
+
+	repeated PrincipalPermissions perPrincipal = 1;
+}
+
+message DatasetGroup {
+    repeated DatasetId datasets = 1;
+
+    Permissions permissions   = 200;
+}
+
+message CalculatorId {
+	string uid  = 1;
+}
+
+message CalculatorDefinition {
+	CalculatorId           uid           = 1;
+	string                 rpcDescriptor = 2;
+	repeated DatasetSchema inputDatasets = 3;
+	repeated DatasetSchema ouputDatasets = 4;
+}
+
+
+message Sandbox {
+	User         owner              = 1;
+	
+	DatasetGroup global             = 2;
+	DatasetGroup stashed            = 3;
+	DatasetGroup pendingValidation  = 4;
+
+	repeated CalculatorDefinition availableCalculators = 5;
+}
+
+service DatasetAuthorizationService {
+	rpc CheckAllowed (DatasetAuthorizationRequest) returns (DatasetAuthorizationResponse);
+}
+
+message DatasetAuthorizationRequest {
+	User            name       = 1;
+	PermissionType  permission = 2;
+	DatasetId       dataset    = 3;
+}
+
+message DatasetAuthorizationResponse {
+    enum Result {
+	    DENIED          = 0;
+	    ALLOWED         = 1;
+	    USER_NOT_FOUND  = 2;
+    }
+
+    Result result = 1;
+}
+
+
