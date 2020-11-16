@@ -12,19 +12,29 @@ package security;
 message User {
   core.UUID                 id          = 1;
   string                    name        = 2;
-  google.protobuf.Timestamp createdAt   = 3; 
+}
+
+message Group {
+  core.UUID                 id          = 1;
+  string                    name        = 2;
+  repeated User             users       = 3;
+  repeated Group            groups      = 4;
 }
 
 message Role {
   core.UUID                 id          = 1;
   string                    name        = 2;
-  google.protobuf.Timestamp createdAt   = 3; 
+  repeated Role             roles       = 3;
 }
 
 message Principal {
+  google.protobuf.Timestamp createdAt   = 10;
+  core.UUID                 createdBy   = 11; 
+
   oneof kind {
-      User user = 1;
-      Role role = 2;
+      User  user  = 1;
+      Group group = 2;
+      Role  role  = 3;
   }
 }
 

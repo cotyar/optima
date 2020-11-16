@@ -154,11 +154,33 @@ message PersistenceType
   }
 
   message DbDatasetInfo {
-    enum DbProvider {
-      Postgres    = 0;
-      Oracle      = 1;
-      SqlServer   = 2;
-      Materialize = 3;
+    message DbProvider {
+      message Postgres {
+        string schemaName  = 1;
+        string tableName   = 2;
+        string tableOwner  = 3;
+        string tableSpace  = 4;
+        bool   hasIndexes  = 5;
+        bool   hasRules    = 6;
+        bool   hasTriggers = 7;
+        bool   rowSecurity = 8; 
+      }
+      message Oracle {
+        
+      }
+      message SqlServer {
+        
+      }
+      message Materialize {
+        
+      }
+
+      oneof db {
+        Postgres    postgres    = 1;
+        Oracle      oracle      = 2;
+        SqlServer   sqlServer   = 3;
+        Materialize materialize = 4;
+      }
     }
 
     DbProvider  dbProvider     = 1;
