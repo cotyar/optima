@@ -2,6 +2,7 @@ syntax = "proto3";
 
 option csharp_namespace = "Optima.Domain.DatasetDefinition";
 
+import public "google/protobuf/any.proto";
 import public "google/protobuf/empty.proto";
 import public "google/protobuf/timestamp.proto";
 import public "google/protobuf/descriptor.proto";
@@ -156,14 +157,31 @@ message PersistenceType
   message DbDatasetInfo {
     message DbProvider {
       message Postgres {
-        string schemaName  = 1;
-        string tableName   = 2;
-        string tableOwner  = 3;
-        string tableSpace  = 4;
-        bool   hasIndexes  = 5;
-        bool   hasRules    = 6;
-        bool   hasTriggers = 7;
-        bool   rowSecurity = 8; 
+        message Column {
+          string              columnName      = 1;
+          string              dataType        = 2;
+          int32               ordinalPosition = 3;
+          bool                isNullable      = 4;
+          string              columnDefault   = 5; // TODO: Change to google.protobuf.Any
+        }
+        string tableCatalog     = 1;
+        string schemaName       = 2;
+        string tableName        = 3;
+        // string tableOwner       = 4;
+        repeated Column columns = 5;
+        // string tableSpace  = 4;
+        // bool   hasIndexes  = 5;
+        // bool   hasRules    = 6;
+        // bool   hasTriggers = 7;
+        // bool   rowSecurity = 8; 
+        // character_maximum_length, 
+        // character_octet_length, 
+        // numeric_precision, 
+        // numeric_precision_radix,
+        // numeric_scale, 
+        // datetime_precision, 
+        // interval_type, 
+        // interval_precision
       }
       message Oracle {
         
