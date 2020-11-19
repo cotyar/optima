@@ -9,16 +9,16 @@ module Inferrers =
     open FSharp.Data
     open FSharp.Data.Runtime.CsvInference
     
-    let inferCsvColumns () =
-        let f = CsvFile.Load("""C:\Work\UMG\optima\FSharp\csv.csv""")
+    let inferCsvColumns (fileName: string) =
+        let f = CsvFile.Load(fileName)
 
         f.InferColumnTypes(0, [||], CultureInfo.InvariantCulture, null, true, false) 
 //        |> Seq.map (fun r -> {| Name = r.Name; InferedType = r.InferedType.FullName |})
         |> Seq.map (fun r -> r.Name, r.InferedType.FullName)
         |> Seq.toArray
         
-    let inferJsonColumns () =
-        let j = JsonValue.Load ("""C:\Work\UMG\optima\FSharp\json.json""")
+    let inferJsonColumns (fileName: string) =
+        let j = JsonValue.Load (fileName)
         let infer =
             function 
             | JsonValue.Record props -> props |> Array.map (function    | (name, JsonValue.Boolean _) -> name, "System.Boolean"

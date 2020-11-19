@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Optima.DatasetLoader;
+using Optima.Domain.DatasetDefinition;
 using Optima.Security;
 
 namespace Optima.TmpRunner
@@ -10,13 +13,20 @@ namespace Optima.TmpRunner
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-            PostgresDatasetSchemaLoader.LoadSchema();
+            foreach (var pt in PostgresDatasetSchemaLoader.LoadSchema("pg")) PrintSchema(pt);
+
+            Console.WriteLine("--- FILES ---");
 
             // await new KeyCloakConnect().AddUser("ccc"); 
-            Console.WriteLine(string.Join(", ", await new KeyCloakConnect().GetUsers()));
-            Console.WriteLine(string.Join(", ", CsvSchemaLoader.InferCsvSchema()));
-            Console.WriteLine(string.Join(", ", CsvSchemaLoader.InferJsonSchema()));
+            // Console.WriteLine(string.Join(", ", await new KeyCloakConnect().GetUsers()));
+            PrintSchema(FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv"));
+            PrintSchema(FileSchemaLoader.InferJsonSchema(@"C:\Work\UMG\optima\FSharp\json.json"));
+            
+            //Console.WriteLine(string.Join(", ", FileSchemaLoader.ReadParquetSchema(@"C:\Work\UMG\hive\data\files\AvroPrimitiveInList.parquet")));
+            PrintSchema(FileSchemaLoader.ReadParquetSchema(@"C:\Work\UMG\Lin\LinNet\LinPlayground\db\parquet\test.parquet")); 
         }
+        
+        static void PrintSchema(PersistenceType pt) => 
+            Console.WriteLine(JsonFormatter.Default.Format(pt));
     }
 }

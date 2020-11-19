@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalcProbe", "CalcProbe\CalcProbe.csproj", "{600E4921-7055-449A-B0F9-D855EE82187E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalcProbeServer", "CalcProbeServer\CalcProbeServer.csproj", "{A2BF6B09-9CB9-4009-AF56-C96839B70298}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalcProbeTestClient", "CalcProbeTestClient\CalcProbeTestClient.csproj", "{8BCD4F47-7B99-4FD9-8A45-3C7B99A50182}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{600E4921-7055-449A-B0F9-D855EE82187E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{600E4921-7055-449A-B0F9-D855EE82187E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{600E4921-7055-449A-B0F9-D855EE82187E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{600E4921-7055-449A-B0F9-D855EE82187E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2BF6B09-9CB9-4009-AF56-C96839B70298}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2BF6B09-9CB9-4009-AF56-C96839B70298}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2BF6B09-9CB9-4009-AF56-C96839B70298}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2BF6B09-9CB9-4009-AF56-C96839B70298}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BCD4F47-7B99-4FD9-8A45-3C7B99A50182}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BCD4F47-7B99-4FD9-8A45-3C7B99A50182}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BCD4F47-7B99-4FD9-8A45-3C7B99A50182}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BCD4F47-7B99-4FD9-8A45-3C7B99A50182}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

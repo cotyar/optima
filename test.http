@@ -8,3 +8,23 @@ content-type: application/json
     "name": "sample",
     "time": "Wed, 21 Oct 2015 18:27:50 GMT"
 }
+
+
+
+http://127.0.0.1:9080/keycloak
+
+https://127.0.0.1:9080/auth/realms/master/protocol/openid-connect/token?grant_type=password&username=keycloakl&password=password&client_id=admin-cli
+Accept: application/json
+content-type: application/x-www-form-urlencoded
+cache-control: no-cache
+
+
+
+{
+    "name": "sample",
+    "time": "Wed, 21 Oct 2015 18:27:50 GMT"
+}
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'cache-control: no-cache' \
+  -d 'grant_type=password&username=<USERNAME>l&password=<PASSWORD>&client_id=admin-cli'

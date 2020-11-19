@@ -7,6 +7,7 @@ import public "google/protobuf/empty.proto";
 import public "google/protobuf/timestamp.proto";
 import public "google/protobuf/descriptor.proto";
 
+import public "security.proto";
 import public "ownership.proto";
 
 package dataset;
@@ -45,12 +46,12 @@ message DatasetSchema {
 }
 
 message DatasetInfo {
-  enum PersistenceType
-  {
-    Memory  = 0;
-    RocksDb = 1;
-    Parquet = 2;
-  }
+  // enum PersistenceType
+  // {
+  //   Memory  = 0;
+  //   RocksDb = 1;
+  //   Parquet = 2;
+  // }
 
   DatasetId       id            = 1;
   string          name          = 2;
@@ -131,6 +132,15 @@ message Dataset {
   }
 }
 
+message DatasetColumn {
+  string                          columnName      = 1;
+  string                          dataType        = 2; // TODO: Change to datatype from reflection
+  int32                           ordinalPosition = 3;
+  bool                            isNullable      = 4;
+  string                          columnDefault   = 5; // TODO: Change to google.protobuf.Any
+  // descriptor.FieldDescriptorProto protoDescriptor = 10;
+}
+
 
 message PersistenceType
 {
@@ -148,27 +158,21 @@ message PersistenceType
       RocksDb = 6;
     }
 
-    string      path          = 1;
-    FileFormat  fileFormat    = 2;
-    bool        isDirectory   = 3;
-    bool        isAppendable  = 4;
+    string                  path          = 1;
+    FileFormat              fileFormat    = 2;
+    bool                    isDirectory   = 3;
+    bool                    isAppendable  = 4;
+    repeated DatasetColumn  columns       = 5;
   }
 
   message DbDatasetInfo {
     message DbProvider {
       message Postgres {
-        message Column {
-          string              columnName      = 1;
-          string              dataType        = 2;
-          int32               ordinalPosition = 3;
-          bool                isNullable      = 4;
-          string              columnDefault   = 5; // TODO: Change to google.protobuf.Any
-        }
-        string tableCatalog     = 1;
-        string schemaName       = 2;
-        string tableName        = 3;
+        string                  tableCatalog    = 1;
+        string                  schemaName      = 2;
+        string                  tableName       = 3;
         // string tableOwner       = 4;
-        repeated Column columns = 5;
+        repeated DatasetColumn  columns         = 5;
         // string tableSpace  = 4;
         // bool   hasIndexes  = 5;
         // bool   hasRules    = 6;
@@ -202,7 +206,7 @@ message PersistenceType
     }
 
     DbProvider  dbProvider     = 1;
-    string      dbProviderName = 2;
+    string      connectionName = 2;
     string      databaseName   = 3;
     string      query          = 4;
   }
@@ -232,11 +236,13 @@ message PersistenceType
     string      query          = 4;
   }
 
+  google.protobuf.DescriptorProto descriptorProto = 1;
+
   oneof persistence {
-    MemoryDatasetInfo memory  = 1;
-    FileDatasetInfo   disk    = 2;
-    DbDatasetInfo     db      = 3;
-    HiveDatasetInfo   hive    = 4;
+    MemoryDatasetInfo memory  = 11;
+    FileDatasetInfo   file    = 12;
+    DbDatasetInfo     db      = 13;
+    HiveDatasetInfo   hive    = 14;
   }
 }
 
