@@ -25,20 +25,22 @@ namespace Optima.DatasetLoader
                     ORDER BY table_catalog, table_schema, table_name, ordinal_position
                 ")
                 .GroupBy(r => (r.table_catalog, r.table_schema, r.table_name), r => r)
-                .Select(g => new Postgres
-                {
-                    TableCatalog = g.Key.table_catalog,
-                    SchemaName = g.Key.table_schema,
-                    TableName   = g.Key.table_name,
-                    Columns = { g.Select(c => new DatasetColumn {
-                        ColumnName = c.column_name,
-                        DataType = c.data_type,
-                        OrdinalPosition = c.ordinal_position,
-                        IsNullable = "YES".Equals(c.is_nullable, StringComparison.InvariantCultureIgnoreCase),
-                        ColumnDefault = c.column_default?.ToString() ?? ""
-                    }) }
-                })
-                .ToImmutableArray();
+                .Select(g => 
+                    (new Postgres
+                        {
+                            TableCatalog = g.Key.table_catalog,
+                            SchemaName = g.Key.table_schema,
+                            TableName   = g.Key.table_name
+                        }, 
+                    g.Select(c => new FieldDef {
+                            Name = c.column_name,
+                            NativeFieldType = c.data_type,
+                            OrdinalPosition = c.ordinal_position,
+                            IsOptional = "YES".Equals(c.is_nullable, StringComparison.InvariantCultureIgnoreCase),
+                            DefaultValue = c.column_default?.ToString() ?? ""
+                        }).ToImmutableArray()
+                    )
+                );
 
 //             using var cmd = new NpgsqlCommand
 //             {
@@ -65,21 +67,23 @@ namespace Optima.DatasetLoader
         
         private static string ConnectionNameResolver(string connectionName) => "Host=localhost;Username=postgres;Password=example;Database=playground";
         
-        private static PersistenceType ToPersistenceType(Postgres postgres) =>
+        private static PersistenceType ToPersistenceType((Postgres, ImmutableArray<FieldDef>) postgres) =>
             new PersistenceType
             {
                 DescriptorProto = new DescriptorProto
                 {
-                    Name = $"{postgres.SchemaName}_{postgres.TableName}",
-                    Field = { postgres.Columns.Select(PersistenceTypeHelper.ColumnToProto) }
+                    Name = $"{postgres.Item1.SchemaName}_{postgres.Item1.TableName}",
+                    Field = { postgres.Item2.Select(PersistenceTypeHelper.ColumnToProto) }
                 },
                 Db = new PersistenceType.Types.DbDatasetInfo { 
-                    DbProvider = new PersistenceType.Types.DbDatasetInfo.Types.DbProvider { Postgres = postgres },
+                    DbProvider = new PersistenceType.Types.DbDatasetInfo.Types.DbProvider { Postgres = postgres.Item1 },
                 }
             };
 
         private class DbColumn
         {
+            // ReSharper disable InconsistentNaming
+            // ReSharper disable UnusedAutoPropertyAccessor.Local
             public string table_catalog { get; set; }
             public string table_schema { get; set; }
             public string table_name { get; set; }
@@ -88,6 +92,8 @@ namespace Optima.DatasetLoader
             public object column_default { get; set; }
             public string is_nullable { get; set; }
             public string data_type { get; set; }
+            // ReSharper restore UnusedAutoPropertyAccessor.Local
+            // ReSharper restore InconsistentNaming
         }
     }
 }

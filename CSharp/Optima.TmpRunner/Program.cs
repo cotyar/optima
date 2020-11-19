@@ -27,6 +27,7 @@ namespace Optima.TmpRunner
         }
         
         static void PrintSchema(PersistenceType pt) => 
-            Console.WriteLine(JsonFormatter.Default.Format(pt));
+            // Console.WriteLine(JsonFormatter.Default.Format(pt));
+            ProtoFileWriter.WriteMessageDescriptor() pt.DescriptorProto.
     }
 }

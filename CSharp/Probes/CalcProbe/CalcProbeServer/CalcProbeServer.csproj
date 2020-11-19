@@ -6,8 +6,12 @@
     </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="lin.proto" GrpcServices="Server" ProtoRoot=".; Protos; ../../../Optima.Interfaces; ../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos/lin.proto" GrpcServices="Server" ProtoRoot=".;Protos; ../../../Optima.Interfaces;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="Protos\generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces;../../../Optima.Interfaces/Protos" />
+
+<!--    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="lin.proto" GrpcServices="Server" ProtoRoot=".; Protos; ../../../Optima.Interfaces; ../../../Optima.Interfaces/Protos" />
     <Protobuf Include="Protos\generated.proto" Link="generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces;../../../Optima.Interfaces/Protos;Protos;..\..\..\Optima.Interfaces;..\..\..\Optima.Interfaces\Protos" />
+-->
   </ItemGroup>
 
 

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <LangVersion>8</LangVersion>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
@@ -11,6 +12,7 @@
     <Protobuf Include="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
     <Protobuf Include="Protos\calculations.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
     <Protobuf Include="Protos\workspace.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
+    <Protobuf Include="Protos\lin.proto" GrpcServices="Server" ProtoRoot=".; Protos" />
   </ItemGroup>
 
   <ItemGroup>

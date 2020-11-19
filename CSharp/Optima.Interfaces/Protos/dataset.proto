@@ -132,13 +132,27 @@ message Dataset {
   }
 }
 
-message DatasetColumn {
-  string                          columnName      = 1;
-  string                          dataType        = 2; // TODO: Change to datatype from reflection
-  int32                           ordinalPosition = 3;
-  bool                            isNullable      = 4;
-  string                          columnDefault   = 5; // TODO: Change to google.protobuf.Any
-  // descriptor.FieldDescriptorProto protoDescriptor = 10;
+enum FieldType {
+  String  = 0;
+  Int8    = 1;
+  Int16   = 2;
+  Int32   = 3;
+  Int64   = 4;
+  Float32 = 5;
+  Float64 = 6;
+  Decimal = 7;
+  Boolean = 8;
+}
+
+message FieldDef {
+  string    name            = 1;
+  DatasetId datasetId       = 2;
+  FieldType type            = 3;
+  string    nativeFieldType = 4; // TODO: Change to datatype from reflection
+  bool      isOptional      = 5;
+  string    defaultValue    = 6; // TODO: Change to google.protobuf.Any
+  int32     ordinalPosition = 7;
+    // descriptor.FieldDescriptorProto protoDescriptor = 10;
 }
 
 
@@ -162,7 +176,6 @@ message PersistenceType
     FileFormat              fileFormat    = 2;
     bool                    isDirectory   = 3;
     bool                    isAppendable  = 4;
-    repeated DatasetColumn  columns       = 5;
   }
 
   message DbDatasetInfo {
@@ -172,7 +185,6 @@ message PersistenceType
         string                  schemaName      = 2;
         string                  tableName       = 3;
         // string tableOwner       = 4;
-        repeated DatasetColumn  columns         = 5;
         // string tableSpace  = 4;
         // bool   hasIndexes  = 5;
         // bool   hasRules    = 6;
@@ -237,6 +249,7 @@ message PersistenceType
   }
 
   google.protobuf.DescriptorProto descriptorProto = 1;
+  repeated FieldDef               fields          = 2;
 
   oneof persistence {
     MemoryDatasetInfo memory  = 11;

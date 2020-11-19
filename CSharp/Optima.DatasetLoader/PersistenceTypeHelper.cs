@@ -5,11 +5,11 @@ namespace Optima.DatasetLoader
 {
     public static class PersistenceTypeHelper
     {
-        public static FieldDescriptorProto ColumnToProto(DatasetColumn column) =>
+        public static FieldDescriptorProto ColumnToProto(FieldDef column) =>
             new FieldDescriptorProto
             {
-                Name = column.ColumnName,
-                Type = column.DataType switch
+                Name = column.Name,
+                Type = column.NativeFieldType switch
                 {
                     "System.Int32" => FieldDescriptorProto.Types.Type.Int32,
                     "System.Int64" => FieldDescriptorProto.Types.Type.Int64,

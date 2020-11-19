@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optima.Security", "Optima.S
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Optima.ColumnInferrer", "Optima.ColumnInferrer\Optima.ColumnInferrer.fsproj", "{0F31CE4A-6104-4773-BF28-9BDCC4D509AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Optima.ProtoGenerator", "Optima.ProtoGenerator\Optima.ProtoGenerator.csproj", "{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -114,5 +116,17 @@ Global
 		{0F31CE4A-6104-4773-BF28-9BDCC4D509AF}.Release|x64.Build.0 = Release|Any CPU
 		{0F31CE4A-6104-4773-BF28-9BDCC4D509AF}.Release|x86.ActiveCfg = Release|Any CPU
 		{0F31CE4A-6104-4773-BF28-9BDCC4D509AF}.Release|x86.Build.0 = Release|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Debug|x64.Build.0 = Debug|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Debug|x86.Build.0 = Debug|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Release|x64.ActiveCfg = Release|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Release|x64.Build.0 = Release|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Release|x86.ActiveCfg = Release|Any CPU
+		{8D4A751B-08BE-41AA-A7C3-BB65E34F6778}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
