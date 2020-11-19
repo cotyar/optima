@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LinNet;
+using Optima.Domain.DatasetDefinition;
 using RazorEngine;
 using RazorEngine.Templating;
 using Stubble.Core.Builders;
@@ -31,19 +32,19 @@ namespace LinCalcServer
             }
         }
         
-        public static async Task<string> GenerateProto(string template, DatasetLineage dataset)
+        public static async Task<string> GenerateProto(string template, DatasetInfo dataset)
         {
             // var template = File.ReadAllText(@"Templates/proto.razor");
 
-            var fields = string.Join("\n    ", FieldDefsToStrings(dataset.Fields));
+            var fields = string.Join("\n    ", FieldDefsToStrings(dataset.PersistedTo.Fields));
  
             var model = new
                 {
                     Package = "lin.generated.test1",
-                    RequestName = dataset.Dataset.Name,
-                    RequestNameLin = dataset.Dataset.Name + "WithLineage",
-                    ResponseName = dataset.Dataset.Name + "Resp",
-                    ResponseNameLin = dataset.Dataset.Name + "Resp" + "WithLineage",
+                    RequestName = dataset.Name,
+                    RequestNameLin = dataset.Name + "WithLineage",
+                    ResponseName = dataset.Name + "Resp",
+                    ResponseNameLin = dataset.Name + "Resp" + "WithLineage",
                     RequestFields = fields,
                     ResponseFields = fields,
                     CsNamespace = "LinNet"

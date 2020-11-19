@@ -5,11 +5,13 @@ option csharp_namespace = "LinNet";
 import public "google/protobuf/empty.proto";
 import public "google/protobuf/timestamp.proto";
 
+import public "dataset.proto";
+
 package lin;
 
 message DatasetLineage {
     message LoadedField {
-        FieldDef            field       = 1;
+        dataset.FieldDef            field       = 1;
         LoadedFieldSource   fieldSource = 2;
     }
 
@@ -22,8 +24,8 @@ message DatasetLineage {
     }
 
     message FieldProjection {
-        FieldDef from = 1;
-        FieldDef to   = 2;
+        dataset.FieldDef from = 1;
+        dataset.FieldDef to   = 2;
 
         string expression = 5; // TODO: Temporal patch
     }
@@ -48,13 +50,13 @@ message DatasetLineage {
     }
 
     message DatasetJoin {
-        DatasetId                   dataset     = 1;
+        dataset.DatasetId           dataset     = 1;
         JoinType                    joinType    = 2;
         repeated RowFilterCondition condition   = 3;
     }
 
-    DatasetInfo         dataset = 1; 
-    repeated FieldDef   fields  = 2;
+    dataset.DatasetInfo         dataset = 1; 
+    repeated dataset.FieldDef   fields  = 2;
     //repeated DatasetLineage previousActivities = 100;
 
     oneof activity {
@@ -69,9 +71,9 @@ message DatasetLineage {
     }
 }
 
-message DatasetId {
-    string uid = 1;
-}
+// message dataset.DatasetId {
+//     string uid = 1;
+// }
 
 message DatasetState {
     message Creating {
@@ -96,59 +98,59 @@ message DatasetState {
 	}
 }
 
-message DatasetInfo {
-    message Rating {
-        enum Stars {
-            ZERO  = 0;
-            ONE   = 1;
-            TWO   = 2;
-            THREE = 3;
-            FOUR  = 4;
-            FIVE  = 5;
-        }
-        Stars stars = 1;
-    }
-    message Comment {
-        User                        user        = 1;
-        string                      comment     = 2;
-        Rating                      rating      = 3;
-        google.protobuf.Timestamp   createdAt   = 5;
-    }
+// message dataset.DatasetInfo {
+//     message Rating {
+//         enum Stars {
+//             ZERO  = 0;
+//             ONE   = 1;
+//             TWO   = 2;
+//             THREE = 3;
+//             FOUR  = 4;
+//             FIVE  = 5;
+//         }
+//         Stars stars = 1;
+//     }
+//     message Comment {
+//         User                        user        = 1;
+//         string                      comment     = 2;
+//         Rating                      rating      = 3;
+//         google.protobuf.Timestamp   createdAt   = 5;
+//     }
     
-    message Tag {
-        enum Category {
-            DEFAULT         = 0;
-            DATASET_NAME    = 1;
-            ON_PREM         = 2;
-            CLOUD           = 3;
-            PROD            = 4;
-        }
-        string      tag      = 1;
-        Category    category = 2;
-    }
+//     message Tag {
+//         enum Category {
+//             DEFAULT         = 0;
+//             DATASET_NAME    = 1;
+//             ON_PREM         = 2;
+//             CLOUD           = 3;
+//             PROD            = 4;
+//         }
+//         string      tag      = 1;
+//         Category    category = 2;
+//     }
 
-    enum PersistenceType
-    {
-        Memory  = 0;
-        RocksDb = 1;
-        Parquet = 2;
-    }
+//     enum PersistenceType
+//     {
+//         Memory  = 0;
+//         RocksDb = 1;
+//         Parquet = 2;
+//     }
     
-    DatasetId                   datasetId   = 1;
-    string                      name        = 2;
-    User                        owner       = 3;
-    User                        createdBy   = 4;
-    google.protobuf.Timestamp   createdAt   = 5; 
-    uint32                      size        = 6;
-    string                      description = 7;
-    Rating                      rating      = 8;
-    repeated Comment            comments    = 9;
-    repeated Tag                tags        = 10;
+//     dataset.DatasetId                   dataset.DatasetId   = 1;
+//     string                      name        = 2;
+//     User                        owner       = 3;
+//     User                        createdBy   = 4;
+//     google.protobuf.Timestamp   createdAt   = 5; 
+//     uint32                      size        = 6;
+//     string                      description = 7;
+//     Rating                      rating      = 8;
+//     repeated Comment            comments    = 9;
+//     repeated Tag                tags        = 10;
 
-    PersistenceType             persistedTo  = 20;
+//     PersistenceType             persistedTo  = 20;
     
-    DatasetState                datasetState = 100;
-}
+//     DatasetState                datasetState = 100;
+// }
 
 enum LoadedFieldSource {
     Const       = 0;
@@ -160,25 +162,25 @@ enum LoadedFieldSource {
     DataFactory = 6;
 }
 
-enum FieldType {
-    String  = 0;
-    Int8    = 1;
-    Int16   = 2;
-    Int32   = 3;
-    Int64   = 4;
-    Float32 = 5;
-    Float64 = 6;
-    Decimal = 7;
-    Boolean = 8;
-}
+// enum FieldType {
+//     String  = 0;
+//     Int8    = 1;
+//     Int16   = 2;
+//     Int32   = 3;
+//     Int64   = 4;
+//     Float32 = 5;
+//     Float64 = 6;
+//     Decimal = 7;
+//     Boolean = 8;
+// }
 
-message FieldDef {
-    string    name          = 1;
-    DatasetId datasetId     = 2;
-    FieldType type          = 3;
-    bool      optionalField = 4;
-    string    defaultValue  = 5;
-}
+// message dataset.FieldDef {
+//     string    name          = 1;
+//     dataset.DatasetId dataset.DatasetId     = 2;
+//     FieldType type          = 3;
+//     bool      optionalField = 4;
+//     string    defaultValue  = 5;
+// }
 
 message RowFilterCondition {
     string condition = 1; // TODO: Change to some kind of Expression Tree
@@ -204,13 +206,13 @@ enum JoinType {
     CROSS        = 4;
 }
 
-message DatasetSchema {
-	string descriptor = 1;
-}
+// message dataset.DatasetSchema {
+// 	string descriptor = 1;
+// }
 
 message RowLineage {
 	message RowFieldLineage {
-	    repeated FieldDef   parents         = 1;
+	    repeated dataset.FieldDef   parents         = 1;
 	    CalculatorId        calculatorId    = 2;
         int64               rowId           = 3;
     }
@@ -251,7 +253,7 @@ message Permissions {
 }
 
 message DatasetGroup {
-    repeated DatasetId datasets = 1;
+    repeated dataset.DatasetId datasets = 1;
 
     Permissions permissions   = 200;
 }
@@ -263,8 +265,8 @@ message CalculatorId {
 message CalculatorDefinition {
 	CalculatorId           uid           = 1;
 	string                 rpcDescriptor = 2;
-	repeated DatasetSchema inputDatasets = 3;
-	repeated DatasetSchema ouputDatasets = 4;
+	repeated dataset.DatasetSchema inputDatasets = 3;
+	repeated dataset.DatasetSchema ouputDatasets = 4;
 }
 
 
@@ -285,7 +287,7 @@ service DatasetAuthorizationService {
 message DatasetAuthorizationRequest {
 	User            name       = 1;
 	PermissionType  permission = 2;
-	DatasetId       dataset    = 3;
+	dataset.DatasetId       dataset    = 3;
 }
 
 message DatasetAuthorizationResponse {

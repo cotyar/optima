@@ -2,14 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Google.Protobuf.Reflection;
 using LinNet;
+using Optima.Domain.DatasetDefinition;
 // using Prototypes;
 using RazorEngine;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
-using FieldType = LinNet.FieldType;
+// using FieldType = LinNet.FieldType;
 
 namespace LinCalcServer
 {
@@ -21,10 +21,16 @@ namespace LinCalcServer
             
             var user = new User {Name = "John Smith", Uid = Guid.NewGuid().ToString()};
             
-            var dl = new DatasetLineage
+            var dl = new DatasetInfo
             {
-                Dataset = new DatasetInfo { Name = "TestDataset" },
-                Fields = { new FieldDef { Name = "field1", Type = FieldType.String}, new FieldDef { Name = "field2", Type = FieldType.Int32 } } 
+                
+                Name = "TestDataset",
+                PersistedTo = new PersistenceType
+                {
+                    Fields = { new FieldDef { Name = "field1", Type = FieldType.String}, new FieldDef { Name = "field2", Type = FieldType.Int32 }, new FieldDef { Name = "field3", Type = FieldType.Boolean } },
+                    Memory = new PersistenceType.Types.MemoryDatasetInfo()
+                }
+                
             };
             
             Console.WriteLine(await FileHelper.GenerateProto(template, dl));
