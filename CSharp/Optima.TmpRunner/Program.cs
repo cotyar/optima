@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -19,15 +20,35 @@ namespace Optima.TmpRunner
 
             // await new KeyCloakConnect().AddUser("ccc"); 
             // Console.WriteLine(string.Join(", ", await new KeyCloakConnect().GetUsers()));
-            PrintSchema(FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv"));
-            PrintSchema(FileSchemaLoader.InferJsonSchema(@"C:\Work\UMG\optima\FSharp\json.json"));
+            await PrintSchema(FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv"));
+            await PrintSchema(FileSchemaLoader.InferJsonSchema(@"C:\Work\UMG\optima\FSharp\json.json"));
             
             //Console.WriteLine(string.Join(", ", FileSchemaLoader.ReadParquetSchema(@"C:\Work\UMG\hive\data\files\AvroPrimitiveInList.parquet")));
-            PrintSchema(FileSchemaLoader.ReadParquetSchema(@"C:\Work\UMG\Lin\LinNet\LinPlayground\db\parquet\test.parquet")); 
+            await PrintSchema(FileSchemaLoader.ReadParquetSchema(@"C:\Work\UMG\Lin\LinNet\LinPlayground\db\parquet\test.parquet")); 
         }
         
-        static void PrintSchema(PersistenceType pt) => 
-            // Console.WriteLine(JsonFormatter.Default.Format(pt));
-            ProtoFileWriter.WriteMessageDescriptor() pt.DescriptorProto.
+        static async Task PrintSchema(PersistenceType pt)
+        {
+            var template = await File.ReadAllTextAsync(@"../Optima.ProtoGenerator/Templates/proto.mustache");
+
+            var name = pt.PersistenceCase switch
+            {
+                PersistenceType.PersistenceOneofCase.File => Path.GetFileNameWithoutExtension(pt.File.Path),
+                PersistenceType.PersistenceOneofCase.Db => $"{pt.Db.DbProvider.Postgres.TableCatalog}_{pt.Db.DbProvider.Postgres.SchemaName}_{pt.Db.DbProvider.Postgres.TableName}",
+                // PersistenceType.PersistenceOneofCase.None => ,
+                // PersistenceType.PersistenceOneofCase.Hive => ,
+                // PersistenceType.PersistenceOneofCase.Memory => ,
+                _ => $"Mds{Guid.NewGuid():N}"
+            };
+            
+            var dl = new DatasetInfo
+            {
+                Name = name,
+                PersistedTo = pt
+            };
+            
+            //ProtoFileWriter.WriteMessageDescriptor();
+            Console.WriteLine(await Optima.ProtoGenerator.FileHelper.GenerateProto(template, dl));
+        }
     }
 }

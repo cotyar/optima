@@ -6,8 +6,12 @@
     </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos/lin.proto" GrpcServices="Server" ProtoRoot=".;Protos; ../../../Optima.Interfaces;../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="Protos\generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="../../../Optima.Interfaces/Protos/core.proto" Link="Protos\core.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="../../../Optima.Interfaces/Protos/ownership.proto" Link="Protos\ownership.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="../../../Optima.Interfaces/Protos/security.proto" Link="Protos\security.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="../../../Optima.Interfaces/Protos/dataset.proto" Link="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos\lin.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+    <Protobuf Include="Protos\generated.proto" Link="Protos\generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;..\..\..\Optima.Interfaces\Protos" />
 
 <!--    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="lin.proto" GrpcServices="Server" ProtoRoot=".; Protos; ../../../Optima.Interfaces; ../../../Optima.Interfaces/Protos" />
     <Protobuf Include="Protos\generated.proto" Link="generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces;../../../Optima.Interfaces/Protos;Protos;..\..\..\Optima.Interfaces;..\..\..\Optima.Interfaces\Protos" />
@@ -38,4 +42,8 @@
       <Folder Include="Protos" />
     </ItemGroup>
 
+<!--    <ItemGroup>
+      <ProjectReference Include="..\CalcProbe\CalcProbe.csproj" />
+    </ItemGroup>
+ -->
 </Project>

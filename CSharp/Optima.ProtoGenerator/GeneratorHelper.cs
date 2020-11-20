@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using LinNet;
 using Optima.Domain.DatasetDefinition;
-using RazorEngine;
-using RazorEngine.Templating;
 using Stubble.Core.Builders;
 
-// using LinNet;
-
-namespace LinCalcServer
+namespace Optima.ProtoGenerator
 {
     public static class FileHelper
     {
@@ -40,14 +34,14 @@ namespace LinCalcServer
  
             var model = new
                 {
-                    Package = "lin.generated.test1",
-                    RequestName = dataset.Name,
-                    RequestNameLin = dataset.Name + "WithLineage",
-                    ResponseName = dataset.Name + "Resp",
-                    ResponseNameLin = dataset.Name + "Resp" + "WithLineage",
+                    Package = $"optimacalc.{dataset.Name.ToLowerInvariant()}",
+                    RequestName = $"{dataset.Name}_Req",
+                    RequestNameLin = $"{dataset.Name}_ReqWithLineage",
+                    ResponseName = $"{dataset.Name}_Resp",
+                    ResponseNameLin = $"{dataset.Name}_RespWithLineage",
                     RequestFields = fields,
                     ResponseFields = fields,
-                    CsNamespace = "LinNet"
+                    CsNamespace = "Optima.Calc"
                 };
                     
             var result = await (new StubbleBuilder().Build()).RenderAsync(template, model);

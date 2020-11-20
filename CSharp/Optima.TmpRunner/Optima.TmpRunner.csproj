@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Optima.DatasetLoader\Optima.DatasetLoader.csproj" />
+    <ProjectReference Include="..\Optima.ProtoGenerator\Optima.ProtoGenerator.csproj" />
     <ProjectReference Include="..\Optima.Security\Optima.Security.csproj" />
   </ItemGroup>
 
