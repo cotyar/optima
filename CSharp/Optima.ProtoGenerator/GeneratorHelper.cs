@@ -14,44 +14,27 @@ namespace Optima.ProtoGenerator
         public static async Task CopyDirectory(string sourceDirectory, string destDirectory, string[] ignorePatterns = null)
         {
             ignorePatterns ??= new string[0];
+            if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) return;
             
-            foreach (var dirName in Directory.GetDirectories(sourceDirectory, "*", new EnumerationOptions {RecurseSubdirectories = true}))
+            if (!Directory.Exists( destDirectory ))
+                Directory.CreateDirectory( destDirectory );
+            
+            var files = Directory.GetFiles( sourceDirectory );
+            foreach (var file in files)
             {
-                if (ignorePatterns.Any(pattern => Regex.IsMatch(dirName, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
+                if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
                 
-                var relativeName = Path.GetRelativePath(sourceDirectory, dirName);
-                Directory.CreateDirectory(Path.Combine(destDirectory, relativeName));
+                var name = Path.GetFileName( file );
+                var dest = Path.Combine( destDirectory, name );
+                // await File.WriteAllBytesAsync(dest, await File.ReadAllBytesAsync(file));
+                File.Copy( file, dest );
             }
-
-            foreach (var fileName in Directory.GetFiles(sourceDirectory, "*", new EnumerationOptions {RecurseSubdirectories = true}))
+            var folders = Directory.GetDirectories( sourceDirectory );
+            foreach (var folder in folders)
             {
-                if (ignorePatterns.Any(pattern => Regex.IsMatch(fileName, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
-                
-                Console.WriteLine($"fn - '{fileName}'");
-                Console.WriteLine($"dd - '{destDirectory}'");
-                var relativeName = Path.GetRelativePath(sourceDirectory, fileName);
-                Console.WriteLine($"rn - '{relativeName}'");
-                try
-                { 
-                    await using var sourceStream = File.Open(fileName, FileMode.Open, FileAccess.Read);
-                    var destFileName = Path.Combine(destDirectory, relativeName);
-                    Console.WriteLine($"df - '{destFileName}'");
-                    await using var destinationStream = File.Create(destFileName);
-
-                    await sourceStream.CopyToAsync(destinationStream);
-                    
-                    await sourceStream.FlushAsync(); 
-                    await destinationStream.FlushAsync();
-                    destinationStream.Close();
-                    sourceStream.Close();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    Console.WriteLine(fileName);
-                    Console.WriteLine(destDirectory);
-                    throw;
-                }
+                var name = Path.GetFileName( folder );
+                var dest = Path.Combine( destDirectory, name );
+                await CopyDirectory( folder, dest, ignorePatterns);
             }
         }
         
@@ -110,7 +93,7 @@ namespace Optima.ProtoGenerator
         public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "Generated_")
         {
             // var template = await File.ReadAllTextAsync(@"Templates/proto.mustache");
-            await CopyDirectory(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea"});
+            await CopyDirectory(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea", @"\.vs.*"});
         }
     }
 }

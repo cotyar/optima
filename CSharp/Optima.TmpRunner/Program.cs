@@ -50,7 +50,7 @@ namespace Optima.TmpRunner
             //ProtoFileWriter.WriteMessageDescriptor();
             Console.WriteLine(await ProtoGenerator.FileHelper.GenerateProto(template, dl));
 
-            await ProtoGenerator.FileHelper.GenerateCalcProbe(dl);
+            await ProtoGenerator.FileHelper.GenerateCalcProbe(dl, @"C:\Work\UMG\Probs_Generated");
         }
     }
 }
