@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Optima.Domain.DatasetDefinition;
 using Stubble.Core.Builders;
@@ -9,20 +11,47 @@ namespace Optima.ProtoGenerator
 {
     public static class FileHelper
     {
-        public static async Task CopyDirectory(string sourceDirectory, string destDirectory)
+        public static async Task CopyDirectory(string sourceDirectory, string destDirectory, string[] ignorePatterns = null)
         {
+            ignorePatterns ??= new string[0];
+            
             foreach (var dirName in Directory.GetDirectories(sourceDirectory, "*", new EnumerationOptions {RecurseSubdirectories = true}))
             {
+                if (ignorePatterns.Any(pattern => Regex.IsMatch(dirName, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
+                
                 var relativeName = Path.GetRelativePath(sourceDirectory, dirName);
                 Directory.CreateDirectory(Path.Combine(destDirectory, relativeName));
             }
 
-            foreach (var filename in Directory.GetFiles(sourceDirectory, "*", new EnumerationOptions {RecurseSubdirectories = true}))
+            foreach (var fileName in Directory.GetFiles(sourceDirectory, "*", new EnumerationOptions {RecurseSubdirectories = true}))
             {
-                var relativeName = Path.GetRelativePath(sourceDirectory, filename);
-                await using var sourceStream = File.Open(filename, FileMode.Create);
-                await using var destinationStream = File.Create(Path.Combine(destDirectory, relativeName));
-                await sourceStream.CopyToAsync(destinationStream);
+                if (ignorePatterns.Any(pattern => Regex.IsMatch(fileName, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
+                
+                Console.WriteLine($"fn - '{fileName}'");
+                Console.WriteLine($"dd - '{destDirectory}'");
+                var relativeName = Path.GetRelativePath(sourceDirectory, fileName);
+                Console.WriteLine($"rn - '{relativeName}'");
+                try
+                { 
+                    await using var sourceStream = File.Open(fileName, FileMode.Open, FileAccess.Read);
+                    var destFileName = Path.Combine(destDirectory, relativeName);
+                    Console.WriteLine($"df - '{destFileName}'");
+                    await using var destinationStream = File.Create(destFileName);
+
+                    await sourceStream.CopyToAsync(destinationStream);
+                    
+                    await sourceStream.FlushAsync(); 
+                    await destinationStream.FlushAsync();
+                    destinationStream.Close();
+                    sourceStream.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Console.WriteLine(fileName);
+                    Console.WriteLine(destDirectory);
+                    throw;
+                }
             }
         }
         
@@ -77,5 +106,11 @@ namespace Optima.ProtoGenerator
                 }).
                 Select(f => $"{f.Type} {f.Name} = {f.Index};"). 
                 ToArray();
+
+        public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "Generated_")
+        {
+            // var template = await File.ReadAllTextAsync(@"Templates/proto.mustache");
+            await CopyDirectory(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea"});
+        }
     }
 }

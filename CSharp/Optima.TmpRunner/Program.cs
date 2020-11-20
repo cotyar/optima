@@ -48,7 +48,9 @@ namespace Optima.TmpRunner
             };
             
             //ProtoFileWriter.WriteMessageDescriptor();
-            Console.WriteLine(await Optima.ProtoGenerator.FileHelper.GenerateProto(template, dl));
+            Console.WriteLine(await ProtoGenerator.FileHelper.GenerateProto(template, dl));
+
+            await ProtoGenerator.FileHelper.GenerateCalcProbe(dl);
         }
     }
 }
