@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Generated;
 using Grpc.Core;
 using Grpc.Core.Utils;
-using LinNet;
+using AutoFixture;
 
 namespace CalcProbeTestClient
 {
@@ -37,7 +38,8 @@ namespace CalcProbeTestClient
             await sharpLinRunCall.ResponseStream.ForEachAsync(async r => Console.WriteLine($"C# Lin server response: {r}"));
         }
 
-        static TestDataset ToTestRequest(int i) => new TestDataset {Field1 = $"Request {i}", Field2 = i};
-        static TestDatasetWithLineage ToTestRequestWithLineage(TestDataset TestDataset) => new TestDatasetWithLineage { Request = TestDataset };
+        //static Req ToTestRequest(int i) => new Req {Field1 = $"Request {i}", Field2 = i};
+        static Req ToTestRequest(int i) => new Fixture().Create<Req>();
+        static ReqWithLineage ToTestRequestWithLineage(Req req) => new ReqWithLineage { Request = req };
     }
 }

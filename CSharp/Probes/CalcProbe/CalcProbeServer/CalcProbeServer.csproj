@@ -5,45 +5,29 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
 
-  <ItemGroup>
-    <Protobuf Include="../../../Optima.Interfaces/Protos/core.proto" Link="Protos\core.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="../../../Optima.Interfaces/Protos/ownership.proto" Link="Protos\ownership.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="../../../Optima.Interfaces/Protos/security.proto" Link="Protos\security.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="../../../Optima.Interfaces/Protos/dataset.proto" Link="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos\lin.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="Protos\generated.proto" Link="Protos\generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;..\..\..\Optima.Interfaces\Protos" />
-
-<!--    <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="lin.proto" GrpcServices="Server" ProtoRoot=".; Protos; ../../../Optima.Interfaces; ../../../Optima.Interfaces/Protos" />
-    <Protobuf Include="Protos\generated.proto" Link="generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces;../../../Optima.Interfaces/Protos;Protos;..\..\..\Optima.Interfaces;..\..\..\Optima.Interfaces\Protos" />
--->
-  </ItemGroup>
-
-
-<!--    <ItemGroup>
-        <ProjectReference Include="..\CalcProbe\CalcProbe.csproj" />
-    </ItemGroup>
--->
     <ItemGroup>
         <PackageReference Include="System.Linq.Async" Version="4.1.1" />
         <!--<PackageReference Include="Google.Protobuf" Version="3.12.4" />-->
         <!--<PackageReference Include="Grpc.Core" Version="$(GrpcPackageVersion)" />
     <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />       
     <PackageReference Include="Grpc.Tools" Version="$(GrpcPackageVersion)" PrivateAssets="All" />  -->
-      <PackageReference Include="Google.Protobuf" Version="3.12.4" />
+
+<!--      <PackageReference Include="Google.Protobuf" Version="3.12.4" />
       <PackageReference Include="Grpc.Core" Version="2.31.0" />
       <PackageReference Include="Grpc.Tools" Version="2.31.0" PrivateAssets="All" />
-
+ -->
         <PackageReference Include="Parquet.Net" Version="3.7.5" />
         <PackageReference Include="RocksDbNative" Version="6.2.2" />
         <PackageReference Include="RocksDbSharp" Version="6.2.2" />
     </ItemGroup>
 
-    <ItemGroup>
+<!--    <ItemGroup>
       <Folder Include="Protos" />
     </ItemGroup>
-
-<!--    <ItemGroup>
-      <ProjectReference Include="..\CalcProbe\CalcProbe.csproj" />
-    </ItemGroup>
  -->
+
+    <ItemGroup>
+        <ProjectReference Include="..\CalcProbe\CalcProbe.csproj" />
+    </ItemGroup>
+
 </Project>
