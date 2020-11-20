@@ -11,30 +11,28 @@ namespace Optima.ProtoGenerator
 {
     public static class FileHelper
     {
-        public static async Task CopyDirectory(string sourceDirectory, string destDirectory, string[] ignorePatterns = null)
+        public static async Task CopyDirectoryAsync(string sourceDirectory, string destDirectory, string[] ignorePatterns = null)
         {
             ignorePatterns ??= new string[0];
             if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) return;
             
             if (!Directory.Exists( destDirectory ))
                 Directory.CreateDirectory( destDirectory );
-            
-            var files = Directory.GetFiles( sourceDirectory );
-            foreach (var file in files)
+
+            foreach (var file in Directory.GetFiles( sourceDirectory ))
             {
                 if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
                 
                 var name = Path.GetFileName( file );
                 var dest = Path.Combine( destDirectory, name );
-                // await File.WriteAllBytesAsync(dest, await File.ReadAllBytesAsync(file));
-                File.Copy( file, dest );
+                await File.WriteAllBytesAsync(dest, await File.ReadAllBytesAsync(file));
             }
-            var folders = Directory.GetDirectories( sourceDirectory );
-            foreach (var folder in folders)
+
+            foreach (var folder in Directory.GetDirectories( sourceDirectory ))
             {
                 var name = Path.GetFileName( folder );
                 var dest = Path.Combine( destDirectory, name );
-                await CopyDirectory( folder, dest, ignorePatterns);
+                await CopyDirectoryAsync( folder, dest, ignorePatterns);
             }
         }
         
@@ -93,7 +91,7 @@ namespace Optima.ProtoGenerator
         public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "Generated_")
         {
             // var template = await File.ReadAllTextAsync(@"Templates/proto.mustache");
-            await CopyDirectory(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea", @"\.vs.*"});
+            await CopyDirectoryAsync(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea", @"\.vs.*"});
         }
     }
 }
