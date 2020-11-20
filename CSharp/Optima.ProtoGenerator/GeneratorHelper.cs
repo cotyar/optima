@@ -38,8 +38,6 @@ namespace Optima.ProtoGenerator
         
         public static async Task<string> GenerateProto(string template, DatasetInfo dataset)
         {
-            // var template = File.ReadAllText(@"Templates/proto.razor");
-
             var fields = string.Join("\n    ", FieldDefsToStrings(dataset.PersistedTo.Fields));
  
             var model = new
@@ -55,9 +53,6 @@ namespace Optima.ProtoGenerator
                 };
                     
             var result = await (new StubbleBuilder().Build()).RenderAsync(template, model);
-
-            // Console.WriteLine(result);
-            // File.WriteAllText("GeneratedProtos/generated.proto", result);
 
             return result;
         }
@@ -90,7 +85,6 @@ namespace Optima.ProtoGenerator
 
         public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "Generated_")
         {
-            // var template = await File.ReadAllTextAsync(@"Templates/proto.mustache");
             await CopyDirectoryAsync(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea", @"\.vs.*"});
         }
     }

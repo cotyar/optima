@@ -1,14 +1,39 @@
 ﻿using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Optima.DatasetLoader
 {
     public static class ProcessUtils
     {
-        public static void Run(string filePath, string args)
+        public static void Run(string fileName, string args)
         {
-            var startInfo = new ProcessStartInfo { FileName = filePath, Arguments = args };
-            var process = Process.Start(startInfo);
+            var process = new Process
+            {
+                StartInfo = { FileName = fileName, Arguments = args },
+                EnableRaisingEvents = true
+            };
             process.WaitForExit(); // TODO: Add timeout and required exception handling
+        }
+        
+        static Task<int> RunAsync(string fileName, string args)
+        {
+            var tcs = new TaskCompletionSource<int>();
+
+            var process = new Process
+            {
+                StartInfo = { FileName = fileName, Arguments = args },
+                EnableRaisingEvents = true
+            };
+
+            process.Exited += (sender, args) =>
+            {
+                tcs.SetResult(process.ExitCode);
+                process.Dispose();
+            };
+
+            process.Start();
+
+            return tcs.Task;
         }
     }
 }

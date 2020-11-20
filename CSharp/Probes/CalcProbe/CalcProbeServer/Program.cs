@@ -7,29 +7,27 @@ using CalcProbeServer.Storage;
 using Grpc.Core;
 using Google.Protobuf;
 using LinNet;
+using Optima.Domain.DatasetDefinition;
+
+// {{Usings}}
 using Calc = Generated.Calc;
-using FieldDef = Optima.Domain.DatasetDefinition.FieldDef;
 using Req = Generated.Req;
 using ReqWithLineage = Generated.ReqWithLineage;
 using Resp = Generated.Resp;
 using RespWithLineage = Generated.RespWithLineage;
+// {{/Usings}}
 
 namespace CalcProbeServer
 {
     public class GeneratedCalcBase : Calc.CalcBase
     {
-        private readonly ImmutableDictionary<string, ImmutableArray<Optima.Domain.DatasetDefinition.FieldDef>> _fieldMapping;
+        private readonly ImmutableDictionary<string, ImmutableArray<FieldDef>> _fieldMapping;
         public CalculatorId CalculatorId { get; }
 
-        public GeneratedCalcBase(CalculatorId calculatorId, ImmutableDictionary<string, ImmutableArray<Optima.Domain.DatasetDefinition.FieldDef>> fieldMapping)
+        public GeneratedCalcBase(CalculatorId calculatorId, ImmutableDictionary<string, ImmutableArray<FieldDef>> fieldMapping)
         {
             _fieldMapping = fieldMapping;
             CalculatorId = calculatorId;
-        }
-        
-        public override Task Run(IAsyncStreamReader<Req> requestStream, IServerStreamWriter<Resp> responseStream, ServerCallContext context)
-        {
-            return base.Run(requestStream, responseStream, context);
         }
 
         public override async Task RunWithLineage(IAsyncStreamReader<ReqWithLineage> requestStream, IServerStreamWriter<RespWithLineage> responseStream, ServerCallContext context)
@@ -124,7 +122,7 @@ namespace CalcProbeServer
         private readonly RocksDbWrapper _rocks;
         private readonly CallOptions _options;
 
-        public GeneratedCalcProxy(CalculatorId calculatorId, ImmutableDictionary<string, ImmutableArray<Optima.Domain.DatasetDefinition.FieldDef>> fieldMapping, Calc.CalcClient calcClient, CallOptions options = default, string rocksRootFolder = null) : base(calculatorId, fieldMapping)
+        public GeneratedCalcProxy(CalculatorId calculatorId, ImmutableDictionary<string, ImmutableArray<FieldDef>> fieldMapping, Calc.CalcClient calcClient, CallOptions options = default, string rocksRootFolder = null) : base(calculatorId, fieldMapping)
         {
             _calcClient = calcClient;
             _options = options;
@@ -180,12 +178,12 @@ namespace CalcProbeServer
         public override Task<Req> Echo(Req request, ServerCallContext context) => Task.FromResult(request);
     }
 
-    class Program
+    public static class Program
     {
-        const int PortBase = 5050;
-        static TaskCompletionSource<int> shutdownFlag = new TaskCompletionSource<int>();
+        private const int PortBase = 5050;
+        private static readonly TaskCompletionSource<int> ShutdownFlag = new TaskCompletionSource<int>();
         
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             ImmutableDictionary<string, ImmutableArray<FieldDef>> fieldMapping = default; // TODO: Read from arguments
             // ImmutableDictionary<string, ImmutableArray<FieldDef>> fieldMapping = new []
@@ -209,12 +207,12 @@ namespace CalcProbeServer
             Console.WriteLine("Press any key to stop ...");
             Console.ReadKey();
 
-            shutdownFlag.SetResult(0);
+            ShutdownFlag.SetResult(0);
             
             Task.WaitAll(server, proxySharp, proxyPython);
         }
 
-        static Task StartServer(int port, Calc.CalcBase handler) => Task.Run(async () =>
+        private static Task StartServer(int port, Calc.CalcBase handler) => Task.Run(async () =>
         {
             var server = new Server
             {
@@ -225,7 +223,7 @@ namespace CalcProbeServer
 
             Console.WriteLine("ExampleCalc server listening on port " + port);
 
-            await shutdownFlag.Task;
+            await ShutdownFlag.Task;
             await server.ShutdownAsync();
         });
     }
