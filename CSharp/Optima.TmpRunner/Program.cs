@@ -29,8 +29,6 @@ namespace Optima.TmpRunner
         
         static async Task PrintSchema(PersistenceType pt)
         {
-            var template = await File.ReadAllTextAsync(@"../Optima.ProtoGenerator/Templates/proto.mustache");
-
             var name = pt.PersistenceCase switch
             {
                 PersistenceType.PersistenceOneofCase.File => Path.GetFileNameWithoutExtension(pt.File.Path),
@@ -48,9 +46,9 @@ namespace Optima.TmpRunner
             };
             
             //ProtoFileWriter.WriteMessageDescriptor();
-            Console.WriteLine(await ProtoGenerator.FileHelper.GenerateProto(template, dl));
+            Console.WriteLine(await ProtoGenerator.GeneratorHelper.GenerateProto(dl));
 
-            await ProtoGenerator.FileHelper.GenerateCalcProbe(dl, @"C:\Work\UMG\Probs_Generated");
+            await ProtoGenerator.GeneratorHelper.GenerateCalcProbe(dl, @"C:\Work\UMG\Probs_Generated");
         }
     }
 }

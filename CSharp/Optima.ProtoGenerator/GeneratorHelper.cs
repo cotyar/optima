@@ -6,37 +6,58 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Optima.Domain.DatasetDefinition;
 using Stubble.Core.Builders;
+using Stubble.Extensions.Loaders;
 
 namespace Optima.ProtoGenerator
 {
-    public static class FileHelper
+    public static class GeneratorHelper
     {
-        public static async Task CopyDirectoryAsync(string sourceDirectory, string destDirectory, string[] ignorePatterns = null)
+        public static async Task CopyDirectoryAsync(
+            string sourceDirectory, 
+            string destDirectory, 
+            string[] ignorePatterns = null,
+            IDictionary<string, string> substitutes = null,
+            string[] templatePatterns = null,
+            dynamic templateTags = null)
         {
             ignorePatterns ??= new string[0];
+            substitutes ??= new Dictionary<string, string>();
+            templatePatterns ??= new string[0];
+            
             if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) return;
             
-            if (!Directory.Exists( destDirectory ))
-                Directory.CreateDirectory( destDirectory );
+            if (!Directory.Exists(destDirectory))
+                Directory.CreateDirectory(destDirectory);
 
-            foreach (var file in Directory.GetFiles( sourceDirectory ))
+            foreach (var file in Directory.GetFiles(sourceDirectory))
             {
                 if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
                 
-                var name = Path.GetFileName( file );
-                var dest = Path.Combine( destDirectory, name );
-                await File.WriteAllBytesAsync(dest, await File.ReadAllBytesAsync(file));
+                var name = Path.GetFileName(file);
+                var dest = Path.Combine(destDirectory, name);
+                
+                string content;
+                if (!substitutes.TryGetValue(name, out content))
+                {
+                    content = await File.ReadAllTextAsync(file);
+                    if (templatePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase)))
+                    {
+                        content = await new StubbleBuilder().Build().RenderAsync(content, templateTags);
+                    }
+                }
+
+                await File.WriteAllTextAsync(dest, content);
             }
 
             foreach (var folder in Directory.GetDirectories( sourceDirectory ))
             {
                 var name = Path.GetFileName( folder );
                 var dest = Path.Combine( destDirectory, name );
-                await CopyDirectoryAsync( folder, dest, ignorePatterns);
+                await CopyDirectoryAsync( folder, dest, ignorePatterns, substitutes, templatePatterns, templateTags);
             }
         }
         
-        public static async Task<string> GenerateProto(string template, DatasetInfo dataset)
+        public static async Task<string> GenerateProto(DatasetInfo dataset)
         {
             var fields = string.Join("\n    ", FieldDefsToStrings(dataset.PersistedTo.Fields));
  
@@ -51,10 +72,9 @@ namespace Optima.ProtoGenerator
                     ResponseFields = fields,
                     CsNamespace = "Optima.Calc"
                 };
-                    
-            var result = await (new StubbleBuilder().Build()).RenderAsync(template, model);
 
-            return result;
+            var template = await new EmbeddedResourceLoader(typeof(GeneratorHelper).Assembly).LoadAsync("proto"); 
+            return await new StubbleBuilder().Build().RenderAsync(template, model);
         }
         
         public static Task WriteFile(string fileName, string content) => 
@@ -85,7 +105,10 @@ namespace Optima.ProtoGenerator
 
         public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "Generated_")
         {
-            await CopyDirectoryAsync(modelProbePath, Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), new string [] {"bin", "obj", @"\.idea", @"\.vs.*"});
+            await CopyDirectoryAsync(modelProbePath, 
+                Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), 
+                new [] {"bin", "obj", @"\.idea", @"\.vs.*"},
+                new Dictionary<string, string> { { "generated.proto", await GenerateProto(dataset) } });
         }
     }
 }

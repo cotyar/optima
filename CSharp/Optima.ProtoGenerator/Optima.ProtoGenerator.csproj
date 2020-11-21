@@ -18,13 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Templates\proto.mustache">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\Optima.Interfaces\Optima.Interfaces.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Optima.Interfaces\Optima.Interfaces.csproj" />
+    <None Remove="Templates\proto.mustache" />
+    <EmbeddedResource Include="Templates\proto.mustache" />
   </ItemGroup>
 
 </Project>

@@ -15,8 +15,6 @@ namespace LinCalcServer
     {
         static async Task Main(string[] args)
         {
-            var template = await File.ReadAllTextAsync(@"Templates/proto.mustache");
-            
             var user = new User {Name = "John Smith", Uid = Guid.NewGuid().ToString()};
             
             var dl = new DatasetInfo
@@ -31,7 +29,7 @@ namespace LinCalcServer
                 
             };
             
-            Console.WriteLine(await FileHelper.GenerateProto(template, dl));
+            Console.WriteLine(await GeneratorHelper.GenerateProto(dl));
         }
     }
 }
