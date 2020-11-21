@@ -9,13 +9,15 @@ using Google.Protobuf;
 using LinNet;
 using Optima.Domain.DatasetDefinition;
 
-// {{Usings}}
+#region Substituted usings
+// {{#Usings}}
 using Calc = Generated.Calc;
 using Req = Generated.Req;
 using ReqWithLineage = Generated.ReqWithLineage;
 using Resp = Generated.Resp;
 using RespWithLineage = Generated.RespWithLineage;
 // {{/Usings}}
+#endregion Substituted usings
 
 namespace CalcProbeServer
 {

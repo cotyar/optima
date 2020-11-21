@@ -38,7 +38,6 @@ namespace CalcProbeTestClient
             await sharpLinRunCall.ResponseStream.ForEachAsync(async r => Console.WriteLine($"C# Lin server response: {r}"));
         }
 
-        //static Req ToTestRequest(int i) => new Req {Field1 = $"Request {i}", Field2 = i};
         static Req ToTestRequest(int i) => new Fixture().Create<Req>();
         static ReqWithLineage ToTestRequestWithLineage(Req req) => new ReqWithLineage { Request = req };
     }

@@ -31,7 +31,7 @@ namespace Optima.ProtoGenerator
 
             foreach (var file in Directory.GetFiles(sourceDirectory))
             {
-                if (ignorePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
+                if (ignorePatterns.Any(pattern => Regex.IsMatch(file, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase))) continue;
                 
                 var name = Path.GetFileName(file);
                 var dest = Path.Combine(destDirectory, name);
@@ -40,7 +40,7 @@ namespace Optima.ProtoGenerator
                 if (!substitutes.TryGetValue(name, out content))
                 {
                     content = await File.ReadAllTextAsync(file);
-                    if (templatePatterns.Any(pattern => Regex.IsMatch(sourceDirectory, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase)))
+                    if (templatePatterns.Any(pattern => Regex.IsMatch(name, pattern, RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase)))
                     {
                         content = await new StubbleBuilder().Build().RenderAsync(content, templateTags);
                     }
@@ -59,9 +59,24 @@ namespace Optima.ProtoGenerator
         
         public static async Task<string> GenerateProto(DatasetInfo dataset)
         {
+            var model = ToModel(dataset);
+
+            var template = await new EmbeddedResourceLoader(typeof(GeneratorHelper).Assembly).LoadAsync("proto"); 
+            return await new StubbleBuilder().Build().RenderAsync(template, model);
+        }
+
+        private static dynamic ToModel(DatasetInfo dataset)
+        {
             var fields = string.Join("\n    ", FieldDefsToStrings(dataset.PersistedTo.Fields));
- 
-            var model = new
+            var usingTemplate = @"
+using Calc = {{CsNamespace}}.Calc;
+using Req = {{CsNamespace}}.{{RequestName}};
+using ReqWithLineage = {{CsNamespace}}.{{RequestNameLin}};
+using Resp = {{CsNamespace}}.{{ResponseName}};
+using RespWithLineage = {{CsNamespace}}.{{ResponseNameLin}};
+// ";
+            
+            return new
                 {
                     Package = $"optimacalc.{dataset.Name.ToLowerInvariant()}",
                     RequestName = $"{dataset.Name}_Req",
@@ -70,13 +85,11 @@ namespace Optima.ProtoGenerator
                     ResponseNameLin = $"{dataset.Name}_RespWithLineage",
                     RequestFields = fields,
                     ResponseFields = fields,
-                    CsNamespace = "Optima.Calc"
+                    CsNamespace = "Optima.Calc",
+                    Usings = new Func<string, Func<string, string>, object>((str, render) => render(usingTemplate))
                 };
-
-            var template = await new EmbeddedResourceLoader(typeof(GeneratorHelper).Assembly).LoadAsync("proto"); 
-            return await new StubbleBuilder().Build().RenderAsync(template, model);
         }
-        
+
         public static Task WriteFile(string fileName, string content) => 
             File.WriteAllTextAsync(fileName, content);
 
@@ -108,7 +121,9 @@ namespace Optima.ProtoGenerator
             await CopyDirectoryAsync(modelProbePath, 
                 Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), 
                 new [] {"bin", "obj", @"\.idea", @"\.vs.*"},
-                new Dictionary<string, string> { { "generated.proto", await GenerateProto(dataset) } });
+                new Dictionary<string, string> { { "generated.proto", await GenerateProto(dataset) } },
+                new [] {@".*\.cs"},
+                ToModel(dataset));
         }
     }
 }
