@@ -1,11 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using CalcProbeServer.Storage;
+using CsvHelper;
+using Generated;
 using Grpc.Core;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core.Utils;
 using LinNet;
 using Optima.Domain.DatasetDefinition;
 
@@ -178,6 +186,119 @@ namespace CalcProbeServer
         }
 
         public override Task<Req> Echo(Req request, ServerCallContext context) => Task.FromResult(request);
+    }
+    
+    public class CsvDatasetSource : DatasetSource.DatasetSourceBase
+    {
+        private readonly string _filePath;
+        private readonly string _delimiter;
+        private readonly bool _hasHeader;
+
+        public CsvDatasetSource(string filePath, string delimiter = ",", bool hasHeader = true)
+        {
+            _filePath = filePath;
+            _delimiter = delimiter;
+            _hasHeader = hasHeader;
+        }
+        
+        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<Row> responseStream, ServerCallContext context)
+        {
+            using var reader = new StreamReader(_filePath);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            
+            csv.Configuration.HasHeaderRecord = _hasHeader;
+            csv.Configuration.Delimiter = _delimiter;
+            var records = request.PagingCase switch
+            {
+                DatasetDataRequest.PagingOneofCase.All => csv.GetRecords<Row>(),
+                DatasetDataRequest.PagingOneofCase.Page => csv.GetRecords<Row>().Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize),
+                DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
+                _ => throw new NotImplementedException()
+            };
+            
+            foreach (var row in records)
+            {
+                await responseStream.WriteAsync(row);
+            }
+        }
+    }
+    
+    public class JsonDatasetSource : DatasetSource.DatasetSourceBase
+    {
+        private readonly string _filePath;
+
+        public JsonDatasetSource(string filePath)
+        {
+            _filePath = filePath;
+        }
+        
+        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<Row> responseStream, ServerCallContext context)
+        {
+            await using var reader = File.OpenRead(_filePath); 
+            
+            var records = request.PagingCase switch 
+            {
+                DatasetDataRequest.PagingOneofCase.All => await JsonSerializer.DeserializeAsync<Row[]>(reader),
+                DatasetDataRequest.PagingOneofCase.Page => (await JsonSerializer.DeserializeAsync<Row[]>(reader)).Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize),
+                DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
+                _ => throw new NotImplementedException()
+            };
+            
+            foreach (var row in records)
+            {
+                await responseStream.WriteAsync(row);
+            }
+        }
+    }
+    
+    public class CsvDatasetSink : DatasetSink.DatasetSinkBase
+    {
+        private readonly string _filePath;
+        private readonly string _delimiter;
+        private readonly bool _hasHeader;
+
+        public CsvDatasetSink(string filePath, string delimiter = ",", bool hasHeader = true)
+        {
+            _filePath = filePath;
+            _delimiter = delimiter;
+            _hasHeader = hasHeader;
+        }
+
+        public override async Task<Empty> Data(IAsyncStreamReader<Row> requestStream, ServerCallContext context)
+        {
+            await using var writer = new StreamWriter(_filePath);
+            await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+            
+            csv.WriteHeader<Row>();
+            await csv.NextRecordAsync();
+            while (await requestStream.MoveNext())
+            {
+                csv.WriteRecord(requestStream.Current);
+                await csv.NextRecordAsync();
+            }
+
+            await writer.FlushAsync();
+
+            return new Empty();
+        }
+    }
+    
+    public class JsonDatasetSink : DatasetSink.DatasetSinkBase
+    {
+        private readonly string _filePath;
+
+        public JsonDatasetSink(string filePath)
+        {
+            _filePath = filePath;
+        }
+
+        public override async Task<Empty> Data(IAsyncStreamReader<Row> requestStream, ServerCallContext context)
+        {
+            await using var writer = File.Create(_filePath);
+            await JsonSerializer.SerializeAsync<IList<Row>>(writer, await requestStream.ToListAsync()); // TODO: Find a better streaming way
+            await writer.FlushAsync();
+            return new Empty();
+        }
     }
 
     public static class Program
