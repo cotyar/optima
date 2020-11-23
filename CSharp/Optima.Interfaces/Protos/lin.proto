@@ -263,9 +263,12 @@ message DatasetDataRequest {
     uint64 startIndex = 1;
     uint32 pageSize   = 2;
   }
+  
+  bool returnRowLineage         = 1;
+  
   oneof paging {
-    google.protobuf.Empty all   = 1;
-    Page                  page  = 2;
+    google.protobuf.Empty all   = 11;
+    Page                  page  = 12;
   }
 }
 

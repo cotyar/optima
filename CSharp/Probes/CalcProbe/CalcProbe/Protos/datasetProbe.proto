@@ -13,21 +13,18 @@ message Row {
 }
 
 service DatasetSource {
-    rpc Data (lin.DatasetDataRequest) returns (stream Row);
-
-    rpc DataWithLineage (lin.DatasetDataRequest) returns (stream RowWithLineage);
+    rpc Data (lin.DatasetDataRequest) returns (stream RowWithLineage);
 
 //    rpc Metadata (google.protobuf.Empty) returns (lin.DatasetLineage);
 }
 
 service DatasetSink {
-    rpc Data (stream Row) returns (google.protobuf.Empty);
-
-    rpc DataWithLineage (stream RowWithLineage) returns (google.protobuf.Empty);
+    rpc Data (stream RowWithLineage) returns (google.protobuf.Empty);
 }
 
 
 message RowWithLineage {
-    Row             row         = 1;
-    lin.RowLineage  rowLineage  = 2;
+    uint64          rowNum      = 1;
+    Row             row         = 2;
+    lin.RowLineage  rowLineage  = 3;
 }

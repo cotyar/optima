@@ -19,9 +19,9 @@ namespace CalcProbeServer.Storage
             _options = new DbOptions().
                 SetCreateIfMissing(true).
                 SetAllowMmapWrites(false).
-                SetAllowMmapReads(false);
+                SetAllowMmapReads(true);
         }
-        public void Write(IEnumerable<byte[]> data, string dbName, string tableName = null)
+        public void WriteAll(IEnumerable<byte[]> data, string dbName, string tableName = null)
         {
             var rocksPath = Path.Combine(_databaseRootFolder, dbName);
             Directory.CreateDirectory(rocksPath);
@@ -36,7 +36,8 @@ namespace CalcProbeServer.Storage
             const long batchFlushInterval = 100_000;
             foreach (var d in data)
             {
-                wb.Put(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(++i)), d);
+                i++;
+                wb.Put(ToKey(i), d);
                 if (i % batchFlushInterval == 0L)
                 {
                     db.Write(wb);
@@ -51,7 +52,7 @@ namespace CalcProbeServer.Storage
             db.CompactRange("k", "l");
         }
 
-        public IEnumerable<(long, byte[])> Read(string dbName, string tableName = null)
+        public IEnumerable<(long, byte[])> ReadAll(string dbName, string tableName = null)
         {
             var rocksPath = Path.Combine(_databaseRootFolder, dbName);
             using var db = RocksDb.OpenReadOnly(_options, rocksPath, false);
@@ -62,9 +63,27 @@ namespace CalcProbeServer.Storage
             iter.SeekToFirst();
             while (iter.Valid())
             {
-                yield return (IPAddress.NetworkToHostOrder(BitConverter.ToInt64(iter.Key())), iter.Value());
+                yield return (FromKey(iter.Key()), iter.Value());
                 iter.Next();
             }
         }
+        
+        public IEnumerable<(long, byte[])> ReadPage(string dbName, long startFrom, uint pageSize, string tableName = null)
+        {
+            var rocksPath = Path.Combine(_databaseRootFolder, dbName);
+            using var db = RocksDb.OpenReadOnly(_options, rocksPath, false);
+
+            var cf = db.GetColumnFamily(tableName ?? "data");
+
+            using var iter = db.NewIterator(cf);
+            iter.Seek(ToKey(startFrom));
+            for (var i = 0; i < pageSize && iter.Valid(); i++, iter.Next())
+            {
+                yield return (FromKey(iter.Key()), iter.Value());
+            }
+        }
+        
+        private static byte[] ToKey(long i) => BitConverter.GetBytes(IPAddress.HostToNetworkOrder(i));
+        private static long FromKey(byte[] key) => IPAddress.NetworkToHostOrder(BitConverter.ToInt64(key));
     }
 }

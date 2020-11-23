@@ -167,7 +167,7 @@ namespace CalcProbeServer
             
             var dbTask = _rocks == null 
                 ? Task.CompletedTask 
-                : Task.Run(() => _rocks.Write(rocksChannel.Reader.ReadAllAsync().ToEnumerable().Select(r => r.ToByteArray()), runUid));
+                : Task.Run(() => _rocks.WriteAll(rocksChannel.Reader.ReadAllAsync().ToEnumerable().Select(r => r.ToByteArray()), runUid));
 
             await readTask;
             await writeTask;
@@ -201,7 +201,7 @@ namespace CalcProbeServer
             _hasHeader = hasHeader;
         }
         
-        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<Row> responseStream, ServerCallContext context)
+        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<RowWithLineage> responseStream, ServerCallContext context)
         {
             using var reader = new StreamReader(_filePath);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -210,8 +210,9 @@ namespace CalcProbeServer
             csv.Configuration.Delimiter = _delimiter;
             var records = request.PagingCase switch
             {
-                DatasetDataRequest.PagingOneofCase.All => csv.GetRecords<Row>(),
-                DatasetDataRequest.PagingOneofCase.Page => csv.GetRecords<Row>().Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize),
+                DatasetDataRequest.PagingOneofCase.All => csv.GetRecords<Row>().Select((r, i) => new RowWithLineage { RowNum = (ulong)i, Row = r }),
+                DatasetDataRequest.PagingOneofCase.Page => csv.GetRecords<Row>().Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize).
+                    Select((r, i) => new RowWithLineage { RowNum = (ulong)i + request.Page.StartIndex, Row = r }),
                 DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
                 _ => throw new NotImplementedException()
             };
@@ -232,14 +233,45 @@ namespace CalcProbeServer
             _filePath = filePath;
         }
         
-        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<Row> responseStream, ServerCallContext context)
+        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<RowWithLineage> responseStream, ServerCallContext context)
         {
             await using var reader = File.OpenRead(_filePath); 
             
             var records = request.PagingCase switch 
             {
-                DatasetDataRequest.PagingOneofCase.All => await JsonSerializer.DeserializeAsync<Row[]>(reader),
-                DatasetDataRequest.PagingOneofCase.Page => (await JsonSerializer.DeserializeAsync<Row[]>(reader)).Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize),
+                DatasetDataRequest.PagingOneofCase.All => (await JsonSerializer.DeserializeAsync<Row[]>(reader)).Select((r, i) => new RowWithLineage { RowNum = (ulong)i, Row = r }),
+                DatasetDataRequest.PagingOneofCase.Page => (await JsonSerializer.DeserializeAsync<Row[]>(reader)).Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize).
+                    Select((r, i) => new RowWithLineage { RowNum = (ulong)i + request.Page.StartIndex, Row = r }),
+                DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
+                _ => throw new NotImplementedException()
+            };
+            
+            foreach (var row in records)
+            {
+                await responseStream.WriteAsync(row);
+            }
+        }
+    }
+    
+    public class RocksDatasetSource : DatasetSource.DatasetSourceBase
+    {
+        private readonly string _folderPath;
+        private readonly DatasetId _datasetId;
+
+        public RocksDatasetSource(string folderPath, DatasetId datasetId)
+        {
+            _folderPath = folderPath;
+            _datasetId = datasetId;
+        }
+        
+        public override async Task Data(DatasetDataRequest request, IServerStreamWriter<RowWithLineage> responseStream, ServerCallContext context)
+        {
+            var reader = new RocksDbWrapper(_folderPath); // TODO: Make wrapped RocksDb long-leaving!!!
+            
+            var records = request.PagingCase switch
+            {
+                DatasetDataRequest.PagingOneofCase.All => reader.ReadAll(_datasetId.Uid).Select(r => RowWithLineage.Parser.ParseFrom(r.Item2)),
+                DatasetDataRequest.PagingOneofCase.Page => reader.ReadPage(_datasetId.Uid, (long)request.Page.StartIndex, request.Page.PageSize).Select(r => RowWithLineage.Parser.ParseFrom(r.Item2)),
                 DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
                 _ => throw new NotImplementedException()
             };
@@ -264,7 +296,7 @@ namespace CalcProbeServer
             _hasHeader = hasHeader;
         }
 
-        public override async Task<Empty> Data(IAsyncStreamReader<Row> requestStream, ServerCallContext context)
+        public override async Task<Empty> Data(IAsyncStreamReader<RowWithLineage> requestStream, ServerCallContext context)
         {
             await using var writer = new StreamWriter(_filePath);
             await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
@@ -273,7 +305,7 @@ namespace CalcProbeServer
             await csv.NextRecordAsync();
             while (await requestStream.MoveNext())
             {
-                csv.WriteRecord(requestStream.Current);
+                csv.WriteRecord(requestStream.Current.Row);
                 await csv.NextRecordAsync();
             }
 
@@ -292,11 +324,36 @@ namespace CalcProbeServer
             _filePath = filePath;
         }
 
-        public override async Task<Empty> Data(IAsyncStreamReader<Row> requestStream, ServerCallContext context)
+        public override async Task<Empty> Data(IAsyncStreamReader<RowWithLineage> requestStream, ServerCallContext context)
         {
             await using var writer = File.Create(_filePath);
-            await JsonSerializer.SerializeAsync<IList<Row>>(writer, await requestStream.ToListAsync()); // TODO: Find a better streaming way
+            await JsonSerializer.SerializeAsync<IList<Row>>(writer, (await requestStream.ToListAsync()).Select(r => r.Row).ToList()); // TODO: Find a better streaming way
             await writer.FlushAsync();
+            return new Empty();
+        }
+    }
+    
+    public class RocksDatasetSink : DatasetSink.DatasetSinkBase
+    {
+        private readonly string _folderPath;
+        private readonly DatasetId _datasetId;
+
+        public RocksDatasetSink(string folderPath, DatasetId datasetId)
+        {
+            _folderPath = folderPath;
+            _datasetId = datasetId;
+        }
+
+        public override async Task<Empty> Data(IAsyncStreamReader<RowWithLineage> requestStream, ServerCallContext context)
+        {
+            var writer = new RocksDbWrapper(_folderPath); // TODO: Make wrapped RocksDb long-leaving!!!
+            
+            writer.WriteAll((await requestStream.ToListAsync()).Select((r, i) =>
+            {
+                r.RowNum = (ulong) i;
+                return r.ToByteArray();
+            }), _datasetId.Uid);
+
             return new Empty();
         }
     }
