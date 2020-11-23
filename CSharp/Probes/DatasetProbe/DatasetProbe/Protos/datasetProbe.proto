@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option csharp_namespace = "Generated";
+
+import public "lin.proto";
+import public "google/protobuf/empty.proto";
+
+package lin.generated.test1;
+
+message Row {
+    string field1 = 1;
+    int32 field2 = 2;
+}
+
+service DatasetSource {
+    rpc Data (lin.DatasetDataRequest) returns (stream RowWithLineage);
+
+//    rpc Metadata (google.protobuf.Empty) returns (lin.DatasetLineage);
+}
+
+service DatasetSink {
+    rpc Data (stream RowWithLineage) returns (google.protobuf.Empty);
+}
+
+
+message RowWithLineage {
+    uint64          rowNum      = 1;
+    Row             row         = 2;
+    lin.RowLineage  rowLineage  = 3;
+}

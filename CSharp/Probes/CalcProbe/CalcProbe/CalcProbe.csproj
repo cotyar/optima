@@ -11,16 +11,7 @@
       <Protobuf Include="../../../Optima.Interfaces/Protos/dataset.proto" Link="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
       <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos\lin.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
       <Protobuf Include="Protos/generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-      <Protobuf Include="Protos/datasetProbe.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" >
-        <GrpcServices>Both</GrpcServices>
-        <Access>Public</Access>
-        <ProtoCompile>True</ProtoCompile>
-        <ProtoRoot>.;Protos;../../../Optima.Interfaces/Protos</ProtoRoot>
-        <CompileOutputs>True</CompileOutputs>
-        <OutputDir>obj\Debug\netstandard2.0\</OutputDir>
-        <Generator>MSBuild:Compile</Generator>
-        <Link>Protos\generated.proto</Link>
-      </Protobuf>
+      <Protobuf Include="Protos/datasetProbe.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
     </ItemGroup>
 
 

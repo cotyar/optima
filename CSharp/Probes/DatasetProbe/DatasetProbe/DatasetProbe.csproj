@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Protobuf Include="../../../Optima.Interfaces/Protos/core.proto" Link="Protos\core.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+        <Protobuf Include="../../../Optima.Interfaces/Protos/ownership.proto" Link="Protos\ownership.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+        <Protobuf Include="../../../Optima.Interfaces/Protos/security.proto" Link="Protos\security.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+        <Protobuf Include="../../../Optima.Interfaces/Protos/dataset.proto" Link="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+        <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos\lin.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+        <Protobuf Include="Protos/datasetProbe.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <PackageReference Include="Google.Protobuf" Version="3.12.4" />
+      <PackageReference Include="Grpc.Core" Version="2.31.0" />
+      <PackageReference Include="Grpc.Tools" Version="2.31.0" PrivateAssets="All" />
+      <PackageReference Include="System.Linq.Async" Version="4.1.1" />
+    </ItemGroup>
+
+</Project>
