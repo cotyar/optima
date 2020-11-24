@@ -75,6 +75,7 @@ namespace Optima.DatasetLoader
                     Name = $"{postgres.Item1.SchemaName}_{postgres.Item1.TableName}",
                     Field = { postgres.Item2.Select(PersistenceTypeHelper.ColumnToProto) }
                 },
+                Fields = { postgres.Item2 },
                 Db = new PersistenceType.Types.DbDatasetInfo { 
                     DbProvider = new PersistenceType.Types.DbDatasetInfo.Types.DbProvider { Postgres = postgres.Item1 },
                 }
