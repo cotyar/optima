@@ -29,7 +29,7 @@ namespace LinCalcServer
                 
             };
             
-            Console.WriteLine(await GeneratorHelper.GenerateProto(dl));
+            Console.WriteLine(await GeneratorHelper.GenerateProto(dl, "datasetProto"));
         }
     }
 }

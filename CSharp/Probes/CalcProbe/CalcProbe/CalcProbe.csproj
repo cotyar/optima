@@ -10,7 +10,7 @@
       <Protobuf Include="../../../Optima.Interfaces/Protos/security.proto" Link="Protos\security.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
       <Protobuf Include="../../../Optima.Interfaces/Protos/dataset.proto" Link="Protos\dataset.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
       <Protobuf Include="../../../Optima.Interfaces/Protos/lin.proto" Link="Protos\lin.proto" GrpcServices="Server" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
-      <Protobuf Include="Protos/generated.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
+      <Protobuf Include="Protos\calcProbe.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
       <Protobuf Include="Protos/datasetProbe.proto" GrpcServices="Both" ProtoRoot=".;Protos;../../../Optima.Interfaces/Protos" />
     </ItemGroup>
 

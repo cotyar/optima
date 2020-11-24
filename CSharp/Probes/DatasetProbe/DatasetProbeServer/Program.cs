@@ -11,7 +11,6 @@ using System.Threading;
 using CalcProbeServer.Storage;
 using Cocona;
 using CsvHelper;
-using Generated;
 using Grpc.Core;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
@@ -23,9 +22,9 @@ using Optima.Domain.DatasetDefinition;
 using Enum = System.Enum;
 
 #region Substituted usings
-// {{#Usings}}
-
-// {{/Usings}}
+// {{#UsingsDs}}
+using Generated;
+// {{/UsingsDs}}
 #endregion Substituted usings
 
 namespace CalcProbeServer
@@ -50,6 +49,7 @@ namespace CalcProbeServer
             
             csv.Configuration.HasHeaderRecord = _hasHeader;
             csv.Configuration.Delimiter = _delimiter;
+            csv.Configuration.MissingFieldFound = null;
             var records = request.PagingCase switch
             {
                 DatasetDataRequest.PagingOneofCase.All => csv.GetRecords<Row>().Select((r, i) => new RowWithLineage { RowNum = (ulong)i, Row = r }).ToArray(),

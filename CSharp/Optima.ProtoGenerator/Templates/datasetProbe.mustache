@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "{{CsDsNamespace}}.{{RowName}}";
+
+import public "lin.proto";
+import public "google/protobuf/empty.proto";
+
+package {{Package}}.{{RowName}};
+
+message Row {
+    {{RequestFields}}
+}
+
+service DatasetSource {
+    rpc Data (lin.DatasetDataRequest) returns (stream RowWithLineage);
+}
+
+service DatasetSink {
+    rpc Data (stream RowWithLineage) returns (google.protobuf.Empty);
+}
+
+message RowWithLineage {
+    uint64          rowNum      = 1;
+    Row             row         = 2;
+    lin.RowLineage  rowLineage  = 3;
+}

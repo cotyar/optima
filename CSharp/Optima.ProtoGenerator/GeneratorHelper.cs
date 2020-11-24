@@ -57,11 +57,11 @@ namespace Optima.ProtoGenerator
             }
         }
         
-        public static async Task<string> GenerateProto(DatasetInfo dataset)
+        public static async Task<string> GenerateProto(DatasetInfo dataset, string templateName)
         {
             var model = ToModel(dataset);
 
-            var template = await new EmbeddedResourceLoader(typeof(GeneratorHelper).Assembly).LoadAsync("proto"); 
+            var template = await new EmbeddedResourceLoader(typeof(GeneratorHelper).Assembly).LoadAsync(templateName); 
             return await new StubbleBuilder().Build().RenderAsync(template, model);
         }
 
@@ -75,6 +75,12 @@ using ReqWithLineage = {{CsNamespace}}.{{RequestNameLin}};
 using Resp = {{CsNamespace}}.{{ResponseName}};
 using RespWithLineage = {{CsNamespace}}.{{ResponseNameLin}};
 // ";
+            var usingDsTemplate = @"
+using Row = {{CsDsNamespace}}.{{RowName}}.Row;
+using RowWithLineage = {{CsDsNamespace}}.{{RowName}}.RowWithLineage;
+using DatasetSource = {{CsDsNamespace}}.{{RowName}}.DatasetSource;
+using DatasetSink = {{CsDsNamespace}}.{{RowName}}.DatasetSink;
+// ";
             
             return new
                 {
@@ -86,7 +92,10 @@ using RespWithLineage = {{CsNamespace}}.{{ResponseNameLin}};
                     RequestFields = fields,
                     ResponseFields = fields,
                     CsNamespace = "Optima.Calc",
-                    Usings = new Func<string, Func<string, string>, object>((str, render) => render(usingTemplate))
+                    RowName = $"{dataset.Name.Replace(" ", "")}",
+                    CsDsNamespace = "Optima.Dataset",
+                    Usings = new Func<string, Func<string, string>, object>((str, render) => render(usingTemplate)),
+                    UsingsDs = new Func<string, Func<string, string>, object>((str, render) => render(usingDsTemplate))
                 };
         }
 
@@ -116,12 +125,16 @@ using RespWithLineage = {{CsNamespace}}.{{ResponseNameLin}};
                 Select(f => $"{f.Type} {f.Name} = {f.Index};"). 
                 ToArray();
 
-        public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "Generated_")
+        public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "CalcGen_")
         {
             await CopyDirectoryAsync(modelProbePath, 
                 Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), 
-                new [] {"bin", "obj", @"\.idea", @"\.vs.*"},
-                new Dictionary<string, string> { { "generated.proto", await GenerateProto(dataset) } },
+                new [] {@".*\\bin\\{0,1}.*", @".*\\obj\\{0,1}.*", @"\.idea", @"\.vs.*"},
+                new Dictionary<string, string>
+                {
+                    { "calcProbe.proto", await GenerateProto(dataset, "calcProbe") },
+                    { "datasetProbe.proto", await GenerateProto(dataset, "datasetProbe") }
+                },
                 new [] {@".*\.cs"},
                 ToModel(dataset));
         }

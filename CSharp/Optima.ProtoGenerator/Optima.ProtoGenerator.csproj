@@ -22,8 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Templates\datasetProbe.mustache" />
     <None Remove="Templates\proto.mustache" />
-    <EmbeddedResource Include="Templates\proto.mustache" />
+    <EmbeddedResource Include="Templates\calcProbe.mustache" />
   </ItemGroup>
 
 </Project>

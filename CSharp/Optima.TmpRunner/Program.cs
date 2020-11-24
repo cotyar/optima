@@ -48,7 +48,7 @@ namespace Optima.TmpRunner
             //ProtoFileWriter.WriteMessageDescriptor();
             // Console.WriteLine(await ProtoGenerator.GeneratorHelper.GenerateProto(dl));
 
-            await ProtoGenerator.GeneratorHelper.GenerateCalcProbe(dl, @"C:\Work\UMG\Probs_Generated");
+            await ProtoGenerator.GeneratorHelper.GenerateCalcProbe(dl, @"C:\Work\UMG\Probs_Generated", modelProbePath: @"../Probes/DatasetProbe", prefix: "DatasetGen_");
         }
     }
 }

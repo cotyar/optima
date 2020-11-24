@@ -29,7 +29,7 @@ namespace Optima.DatasetLoader
         {
             var columns =  Inferrers.inferCsvColumns(fileName).Select(v => new FieldDef
             {
-                Name = v.Item1,
+                Name = v.Item1.Replace(" ", ""),
                 NativeFieldType = v.Item2
             }).ToArray();
             
