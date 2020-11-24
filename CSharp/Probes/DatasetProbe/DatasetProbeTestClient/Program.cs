@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Generated;
 using Grpc.Core;
 using Grpc.Core.Utils;
-using AutoFixture;
 using Google.Protobuf.WellKnownTypes;
 using LinNet;
+
+// {{#UsingsDs}}
+using Generated;
+// {{/UsingsDs}}
 
 namespace CalcProbeTestClient
 {
