@@ -27,8 +27,9 @@ namespace Optima.Actors
                     webBuilder.UseStartup<Startup>()
                         .UseActors(actorRuntime =>
                         {
-                            // Register MyActor actor type
+                            // Register actor types
                             actorRuntime.RegisterActor<DatasetEntryActor>();
+                            actorRuntime.RegisterActor<DatasetRegistryActor>();
                         })
                         .UseUrls($"http://localhost:{AppChannelHttpPort}/");
                 });

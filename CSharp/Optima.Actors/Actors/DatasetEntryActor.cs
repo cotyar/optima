@@ -5,10 +5,11 @@ using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Google.Protobuf.WellKnownTypes;
 using Optima.Domain.DatasetDefinition;
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace Optima.Actors.Actors
 {
-    [Actor(TypeName = "DatasetEntry")]
+    [Actor(TypeName = ActorTypes.DatasetEntry)]
     public class DatasetEntryActor: Actor, IDatasetEntry, IRemindable
     {
         private const string StateName = "dataset_info";
@@ -43,7 +44,7 @@ namespace Optima.Actors.Actors
         /// </summary>
         protected override Task OnDeactivateAsync()
         {
-            // Provides Opporunity to perform optional cleanup.
+            // Provides Opportunity to perform optional cleanup.
             Console.WriteLine($"Deactivating actor id: {Id}");
             return Task.CompletedTask;
         }
@@ -62,6 +63,23 @@ namespace Optima.Actors.Actors
                 data);      // data saved for the named state "my_data"
             
             _state = new ConditionalValue<DatasetInfo>(true, data);
+
+            return "Success";
+        }
+        
+        /// <summary>
+        /// Set MyData into actor's private state store
+        /// </summary>
+        /// <param name="data">the user-defined MyData which will be stored into state store as "my_data" state</param>
+        public async Task<string> DeleteDataAsync()
+        {
+            // Data is saved to configured state store implicitly after each method execution by Actor's runtime.
+            // Data can also be saved explicitly by calling this.StateManager.SaveStateAsync();
+            // State to be saved must be DataContract serializable.
+            await StateManager.RemoveStateAsync(
+                StateName);  // state name
+            
+            _state = new ConditionalValue<DatasetInfo>(false, null);
 
             return "Success";
         }

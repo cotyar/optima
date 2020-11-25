@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapr.Actors;
 using Dapr.Actors.Client;
@@ -13,30 +15,27 @@ namespace Optima.ActorsClient
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-            // while (true) 
-            // {
-            //     for (int i = 0; i < 1000; i++)
-            //         await InvokeActorMethodWithRemotingAsync(i);
-            //     Console.WriteLine("Done");
-            //     Console.ReadKey();
-            // }
-
-            var schema = FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv");
-            var datasetInfo = await ProtoGenerator.GeneratorHelper.ToDatasetInfo(schema);
-            await InvokeActorMethodWithRemotingAsync(datasetInfo);
+            var csvSchema = FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv");
+            var jsonSchema = FileSchemaLoader.InferJsonSchema(@"C:\Work\UMG\optima\FSharp\json.json");
+            var pgSchemas = PostgresDatasetSchemaLoader.LoadSchema("pg");
+            await RegisterSchema(new []{ csvSchema, jsonSchema }.Concat(pgSchemas));
         }
-        
-        static async Task InvokeActorMethodWithRemotingAsync(DatasetInfo datasetInfo)
+
+        private static async Task RegisterSchema(IEnumerable<PersistenceType> schemas)
         {
-            var actorType = "DatasetEntry";      // Registered Actor Type in Actor Service
+            foreach (var schema in schemas)
+                await RegisterDatasetInfo(await ProtoGenerator.GeneratorHelper.ToDatasetInfo(schema));
+        }
+
+        private static async Task RegisterDatasetInfo(DatasetInfo datasetInfo)
+        {
             var actorId = new ActorId(datasetInfo.Id.Uid);
 
             // Create the local proxy by using the same interface that the service implements
             // By using this proxy, you can call strongly typed methods on the interface using Remoting.
-            var proxy = ActorProxy.Create<IDatasetEntry>(actorId, actorType);
+            var proxy = ActorProxy.Create<IDatasetEntry>(actorId, ActorTypes.DatasetEntry);
             var response = await proxy.SetDataAsync(datasetInfo);
-            // Console.WriteLine(response);
+            Console.WriteLine(response);
 
             var savedData = await proxy.GetDataAsync();
             Console.WriteLine(JsonFormatter.Default.Format(savedData));

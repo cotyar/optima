@@ -9,6 +9,7 @@ namespace Optima.Interfaces
     {
         Task<string> SetDataAsync(DatasetInfo data);
         Task<DatasetInfo> GetDataAsync();
+        Task<string> DeleteDataAsync();
         Task RegisterReminder();
         Task UnregisterReminder();
         Task RegisterTimer();
