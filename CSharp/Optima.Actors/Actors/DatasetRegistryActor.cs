@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Optima.Interfaces;
 using Dapr.Actors;
 using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
-using Google.Protobuf.WellKnownTypes;
 using Optima.Domain.DatasetDefinition;
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -17,7 +15,7 @@ namespace Optima.Actors.Actors
     public class DatasetRegistryActor: Actor, IDatasetRegistry
     {
         private const string StateName = "dataset_registry";
-        private ConditionalValue<RegistryState> _state;
+        private RegistryState _state;
 
         /// <summary>
         /// Initializes a new instance of MyActor
@@ -29,7 +27,17 @@ namespace Optima.Actors.Actors
         {
         }
         
-        private Task<ConditionalValue<RegistryState>> GetStateAsync() => StateManager.TryGetStateAsync<RegistryState>(StateName);
+        private async Task<RegistryState> GetStateAsync()
+        {
+            var state = await StateManager.TryGetStateAsync<RegistryState>(StateName);
+            return state.HasValue
+                ? state.Value
+                : new RegistryState
+                    {
+                        Ids = new HashSet<DatasetId>(),
+                        ByName = new Dictionary<string, HashSet<DatasetId>>()
+                    };
+        }
 
         /// <summary>
         /// This method is called whenever an actor is activated.
@@ -58,46 +66,61 @@ namespace Optima.Actors.Actors
         {
             var response = await DatasetEntryActorProxy(datasetInfo.Id).SetDataAsync(datasetInfo);
             Console.WriteLine($"Added {datasetInfo.Id} with response {response}");
+            _state.Ids.Add(datasetInfo.Id);
+            if (!_state.ByName.TryGetValue(datasetInfo.Name, out var ids))
+            {
+                ids = new HashSet<DatasetId>();
+                _state.ByName[datasetInfo.Name] = ids;
+            }
+
+            ids.Add(datasetInfo.Id);
+            
             return response;
+        }
+        
+        public async Task DeleteDataset(DatasetId id)
+        {
+            _state.Ids.Remove(id);
+
+            foreach (var kv in _state.ByName.Where(kv => kv.Value.Contains(id)).ToArray())
+            {
+                kv.Value.Remove(id);
+                if (!kv.Value.Any())
+                {
+                    _state.ByName.Remove(kv.Key);
+                }
+            }
+
+            var response = await DatasetEntryActorProxy(id).DeleteDataAsync();
+            Console.WriteLine($"Deleted {Id} with response {response}");
         }
         
         public Task<DatasetInfo> GetDataset(DatasetId id) => 
             DatasetEntryActorProxy(id).GetDataAsync();
-        
-        public async Task DeleteDataset(DatasetId id)
-        {
-            var response = await DatasetEntryActorProxy(id).DeleteDataAsync();
-            Console.WriteLine($"Deleted {Id} with response {response}");
-        }
 
-        public Task<ImmutableArray<DatasetId>> GetDatasetIds() =>
+        public Task<DatasetId[]> GetDatasetIds() =>
+            Task.FromResult(_state.Ids.ToArray());
+
+        public Task<DatasetId[]> GetDatasetIdsForName(string name) =>
             Task.FromResult(
-                _state.HasValue
-                ? _state.Value.Ids.ToImmutableArray()
-                : ImmutableArray<DatasetId>.Empty);
+                _state.ByName.TryGetValue(name, out var ids)
+                    ? ids.ToArray()
+                    : new DatasetId[0]);
 
-        public Task<ImmutableArray<DatasetId>> GetDatasetIdsForName(string name) =>
-            Task.FromResult(
-                _state.HasValue && _state.Value.ByName.TryGetValue(name, out var ids)
-                    ? ids.ToImmutableArray()
-                    : ImmutableArray<DatasetId>.Empty);
-
-        public async Task<ImmutableArray<DatasetInfo>> GetDatasetsForName(string name)
+        public async Task<DatasetInfo[]> GetDatasetsForName(string name)
         {
             var ids = await GetDatasetIdsForName(name);
-            return (await Task.WhenAll(ids.Select(id => Task.Run(() => GetDataset(id))))).ToImmutableArray();
+            return (await Task.WhenAll(ids.Select(id => Task.Run(() => GetDataset(id))))).ToArray();
         }
 
-        public Task<ImmutableArray<string>> GetDatasetNames()=>
-            Task.FromResult(
-                _state.HasValue
-                    ? _state.Value.ByName.Keys.ToImmutableArray()
-                    : ImmutableArray<string>.Empty);
+        public Task<string[]> GetDatasetNames()=>
+            Task.FromResult(_state.ByName.Keys.ToArray());
 
-        public async Task<ImmutableArray<DatasetInfo>> GetDatasets()
+        public async Task<DatasetInfo[]> GetDatasets()
         {
+            Console.WriteLine("GetDatasets");
             var ids = await GetDatasetIds();
-            return (await Task.WhenAll(ids.Select(id => Task.Run(() => GetDataset(id))))).ToImmutableArray();
+            return (await Task.WhenAll(ids.Select(id => Task.Run(() => GetDataset(id))))).ToArray();
         }
         
         private static IDatasetEntry DatasetEntryActorProxy(DatasetId id) => 
@@ -106,7 +129,7 @@ namespace Optima.Actors.Actors
         private class RegistryState
         {
             public HashSet<DatasetId> Ids { get; set; } 
-            public Dictionary<string, List<DatasetId>> ByName { get; set; } 
+            public Dictionary<string, HashSet<DatasetId>> ByName { get; set; } 
         }
     }
 }

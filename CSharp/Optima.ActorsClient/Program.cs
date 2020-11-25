@@ -13,12 +13,14 @@ namespace Optima.ActorsClient
 {
     class Program
     {
+        private static IDatasetRegistry Proxy = ActorProxy.Create<IDatasetRegistry>(new ActorId("Default"), ActorTypes.DatasetRegistry);
         static async Task Main(string[] args)
         {
             var csvSchema = FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv");
             var jsonSchema = FileSchemaLoader.InferJsonSchema(@"C:\Work\UMG\optima\FSharp\json.json");
             var pgSchemas = PostgresDatasetSchemaLoader.LoadSchema("pg");
             await RegisterSchema(new []{ csvSchema, jsonSchema }.Concat(pgSchemas));
+            await PrintAllDatasets();
         }
 
         private static async Task RegisterSchema(IEnumerable<PersistenceType> schemas)
@@ -29,16 +31,19 @@ namespace Optima.ActorsClient
 
         private static async Task RegisterDatasetInfo(DatasetInfo datasetInfo)
         {
-            var actorId = new ActorId(datasetInfo.Id.Uid);
-
-            // Create the local proxy by using the same interface that the service implements
-            // By using this proxy, you can call strongly typed methods on the interface using Remoting.
-            var proxy = ActorProxy.Create<IDatasetEntry>(actorId, ActorTypes.DatasetEntry);
-            var response = await proxy.SetDataAsync(datasetInfo);
+            var response = await Proxy.RegisterDataset(datasetInfo);
             Console.WriteLine(response);
+            // var savedDataset = await Proxy.GetDataset(datasetInfo.Id);
+            // Console.WriteLine(JsonFormatter.Default.Format(savedDataset));
+        }
 
-            var savedData = await proxy.GetDataAsync();
-            Console.WriteLine(JsonFormatter.Default.Format(savedData));
+        private static async Task PrintAllDatasets()
+        {
+            var savedDatasets = await Proxy.GetDatasets();
+            foreach (var savedDataset  in savedDatasets)
+            {
+                Console.WriteLine(JsonFormatter.Default.Format(savedDataset));
+            }
         }
     }
 }
