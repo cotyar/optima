@@ -44,13 +44,22 @@ enum PermissionType {
   CREATE_NEW = 2;
 }
 
-message Permissions {
-  message PrincipalPermissions {
-    Principal               principal = 1;
+message ResourceId {
+  string id = 1;
+}
+
+message PrincipalPermissions {
+  message Access {
+    ResourceId              resource  = 1;
     repeated PermissionType allowed   = 2;
   }
+  
+  Principal       principal = 1;
+  repeated Access allowed   = 3;
+}
 
-  repeated PrincipalPermissions perPrincipal = 1;
+message Permissions {
+  repeated PrincipalPermissions permissions = 1;
 }
 
 message PrincipalApproval {

@@ -4,5 +4,6 @@
     {
         public const string DatasetEntry = "DatasetEntry";
         public const string DatasetRegistry = "DatasetRegistry";
+        public const string SecurityRegistry = "SecurityRegistry";
     }
 }

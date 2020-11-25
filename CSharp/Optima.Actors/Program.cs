@@ -30,6 +30,7 @@ namespace Optima.Actors
                             // Register actor types
                             actorRuntime.RegisterActor<DatasetEntryActor>();
                             actorRuntime.RegisterActor<DatasetRegistryActor>();
+                            actorRuntime.RegisterActor<SecurityRegistryActor>();
                         })
                         .UseUrls($"http://localhost:{AppChannelHttpPort}/");
                 });

@@ -38,6 +38,8 @@ namespace Optima.Actors.Actors
                         ByName = new Dictionary<string, HashSet<DatasetId>>()
                     };
         }
+        
+        private Task SaveStateAsync() => StateManager.SetStateAsync(StateName, _state);
 
         /// <summary>
         /// This method is called whenever an actor is activated.
@@ -74,6 +76,8 @@ namespace Optima.Actors.Actors
             }
 
             ids.Add(datasetInfo.Id);
+
+            await SaveStateAsync();
             
             return response;
         }
@@ -93,6 +97,8 @@ namespace Optima.Actors.Actors
 
             var response = await DatasetEntryActorProxy(id).DeleteDataAsync();
             Console.WriteLine($"Deleted {Id} with response {response}");
+            
+            await SaveStateAsync();
         }
         
         public Task<DatasetInfo> GetDataset(DatasetId id) => 
