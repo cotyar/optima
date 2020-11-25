@@ -56,18 +56,18 @@ namespace Optima.ProtoGenerator
                 await CopyDirectoryAsync( folder, dest, ignorePatterns, substitutes, templatePatterns, templateTags);
             }
         }
-        
-        public static async Task<string> GenerateProto(DatasetInfo dataset, string templateName)
+
+        private static async Task<string> GenerateProto(string name, IEnumerable<FieldDef> fieldDefs, string templateName)
         {
-            var model = ToModel(dataset);
+            var model = ToModel(name, fieldDefs);
 
             var template = await new EmbeddedResourceLoader(typeof(GeneratorHelper).Assembly).LoadAsync(templateName); 
             return await new StubbleBuilder().Build().RenderAsync(template, model);
         }
 
-        private static dynamic ToModel(DatasetInfo dataset)
+        private static dynamic ToModel(string name, IEnumerable<FieldDef> fieldDefs)
         {
-            var fields = string.Join("\n    ", FieldDefsToStrings(dataset.PersistedTo.Fields));
+            var fields = string.Join("\n    ", FieldDefsToStrings(fieldDefs));
             var usingTemplate = @"
 using Calc = {{CsNamespace}}.Calc;
 using Req = {{CsNamespace}}.{{RequestName}};
@@ -84,15 +84,15 @@ using DatasetSink = {{CsDsNamespace}}.{{RowName}}.DatasetSink;
             
             return new
                 {
-                    Package = $"optimacalc.{dataset.Name.ToLowerInvariant()}",
-                    RequestName = $"{dataset.Name}_Req",
-                    RequestNameLin = $"{dataset.Name}_ReqWithLineage",
-                    ResponseName = $"{dataset.Name}_Resp",
-                    ResponseNameLin = $"{dataset.Name}_RespWithLineage",
+                    Package = $"optimacalc.{name.ToLowerInvariant()}",
+                    RequestName = $"{name}_Req",
+                    RequestNameLin = $"{name}_ReqWithLineage",
+                    ResponseName = $"{name}_Resp",
+                    ResponseNameLin = $"{name}_RespWithLineage",
                     RequestFields = fields,
                     ResponseFields = fields,
                     CsNamespace = "Optima.Calc",
-                    RowName = $"{dataset.Name.Replace(" ", "")}",
+                    RowName = $"{name.Replace(" ", "")}",
                     CsDsNamespace = "Optima.Dataset",
                     Usings = new Func<string, Func<string, string>, object>((str, render) => render(usingTemplate)),
                     UsingsDs = new Func<string, Func<string, string>, object>((str, render) => render(usingDsTemplate))
@@ -125,18 +125,42 @@ using DatasetSink = {{CsDsNamespace}}.{{RowName}}.DatasetSink;
                 Select(f => $"{f.Type} {f.Name} = {f.Index};"). 
                 ToArray();
 
-        public static async Task GenerateCalcProbe(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "CalcGen_")
+        public static Task<string> GenerateDatasetProto(string name, IEnumerable<FieldDef> fieldDefs) => GenerateProto(name, fieldDefs, "datasetProbe");
+
+        public static async Task GenerateProbes(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "CalcGen_")
         {
             await CopyDirectoryAsync(modelProbePath, 
                 Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), 
                 new [] {@".*\\bin\\{0,1}.*", @".*\\obj\\{0,1}.*", @"\.idea", @"\.vs.*"},
                 new Dictionary<string, string>
                 {
-                    { "calcProbe.proto", await GenerateProto(dataset, "calcProbe") },
-                    { "datasetProbe.proto", await GenerateProto(dataset, "datasetProbe") }
+                    { "calcProbe.proto", await GenerateProto(dataset.Name, dataset.PersistedTo.Fields, "calcProbe") },
+                    { "datasetProbe.proto", await GenerateProto(dataset.Name, dataset.PersistedTo.Fields, "datasetProbe") }
                 },
                 new [] {@".*\.cs"},
-                ToModel(dataset));
+                ToModel(dataset.Name, dataset.PersistedTo.Fields));
+        }
+        
+        public static async Task<DatasetInfo> ToDatasetInfo(PersistenceType pt)
+        {
+            var name = pt.PersistenceCase switch
+            {
+                PersistenceType.PersistenceOneofCase.File => Path.GetFileNameWithoutExtension(pt.File.Path),
+                PersistenceType.PersistenceOneofCase.Db =>
+                    $"{pt.Db.DbProvider.Postgres.TableCatalog}_{pt.Db.DbProvider.Postgres.SchemaName}_{pt.Db.DbProvider.Postgres.TableName}",
+                // PersistenceType.PersistenceOneofCase.None => ,
+                // PersistenceType.PersistenceOneofCase.Hive => ,
+                // PersistenceType.PersistenceOneofCase.Memory => ,
+                _ => $"Mds{Guid.NewGuid():N}"
+            };
+
+            return new DatasetInfo
+            {
+                Id = new DatasetId { Uid = Guid.NewGuid().ToString("N") },
+                Name = name,
+                Schema = new DatasetSchema { ProtoFile = await GenerateDatasetProto(name, pt.Fields) },
+                PersistedTo = pt
+            };
         }
     }
 }

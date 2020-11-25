@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Optima.Interfaces;
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
+using Google.Protobuf.WellKnownTypes;
 using Optima.Domain.DatasetDefinition;
 
 namespace Optima.Actors.Actors
@@ -11,7 +12,7 @@ namespace Optima.Actors.Actors
     public class DatasetEntryActor: Actor, IDatasetEntry, IRemindable
     {
         private const string StateName = "dataset_info";
-        private DatasetInfo _state = null;
+        private ConditionalValue<DatasetInfo> _state;
 
         /// <summary>
         /// Initializes a new instance of MyActor
@@ -23,7 +24,7 @@ namespace Optima.Actors.Actors
         {
         }
         
-        private Task<DatasetInfo> GetStateAsync() => StateManager.GetStateAsync<DatasetInfo>(StateName);
+        private Task<ConditionalValue<DatasetInfo>> GetStateAsync() => StateManager.TryGetStateAsync<DatasetInfo>(StateName);
 
         /// <summary>
         /// This method is called whenever an actor is activated.
@@ -59,6 +60,8 @@ namespace Optima.Actors.Actors
             await StateManager.SetStateAsync(
                 StateName,  // state name
                 data);      // data saved for the named state "my_data"
+            
+            _state = new ConditionalValue<DatasetInfo>(true, data);
 
             return "Success";
         }
@@ -67,7 +70,7 @@ namespace Optima.Actors.Actors
         /// Get MyData from actor's private state store
         /// </summary>
         /// <return>the user-defined MyData which is stored into state store as "my_data" state</return>
-        public Task<DatasetInfo> GetDataAsync() => Task.FromResult(_state);
+        public Task<DatasetInfo> GetDataAsync() => Task.FromResult(_state.HasValue ? _state.Value : null);
 
         /// <summary>
         /// Register MyReminder reminder with the actor
