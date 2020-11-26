@@ -7,29 +7,30 @@ import public "google/protobuf/timestamp.proto";
 
 import public "core.proto";
 import public "security.proto";
+import public "dataset.proto";
 
 package ownership;
 
 message DatasetOwner {
-  security.Principal        owner       = 1;
-  google.protobuf.Timestamp assignedAt  = 2;
+  dataset.DatasetId         dataset     = 1;
+  security.Principal        owner       = 2;
+  google.protobuf.Timestamp assignedAt  = 3;
+  google.protobuf.Timestamp withdrawnAt = 4;
 }
 
 message DatasetOwnerHistory {
-  message Entry {
-    repeated security.Principal owner       = 1;
-    google.protobuf.Timestamp   assignedAt  = 2;
-  }
-  repeated DatasetOwnerHistory entries = 1;
+  repeated DatasetOwner history = 1;
 }
 
 message OwnerAuthorizationRequest {
   core.UUID                           id            = 1;
-  security.Principal                  requestedFor  = 2;
-  security.User                       requestedBy   = 3;
-  google.protobuf.Timestamp           requestedAt   = 4;
-  string                              justification = 5;
-  repeated security.PrincipalApproval approvals     = 6; 
+  dataset.DatasetId                   datasetId     = 2;
+  security.Principal                  requestedFor  = 3;
+  security.User                       requestedBy   = 4;
+  google.protobuf.Timestamp           requestedAt   = 5;
+  string                              justification = 6;
+  repeated security.PrincipalApproval approvals     = 7;
+  bool                                isResponded   = 8; 
 }
 
 message OwnerAuthorizationResponse {
@@ -41,8 +42,11 @@ message OwnerAuthorizationResponse {
     google.protobuf.Timestamp   submittedAt = 1;
     string                      reason      = 4;
   }
+
+  OwnerAuthorizationRequest request = 1;
+
   oneof state {
-    Approved approved = 1;
-    Rejected rejected  = 2;
+    Approved approved = 11;
+    Rejected rejected = 12;
   }
 }

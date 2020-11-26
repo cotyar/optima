@@ -13,7 +13,7 @@ namespace Optima.ActorsClient
 {
     class Program
     {
-        private static IDatasetRegistry Proxy = ActorProxy.Create<IDatasetRegistry>(new ActorId("Default"), ActorTypes.DatasetRegistry);
+        private static IDatasetRegistry Proxy = ActorProxy.Create<IDatasetRegistry>(new ActorId("default"), ActorTypes.DatasetRegistry);
         static async Task Main(string[] args)
         {
             var csvSchema = FileSchemaLoader.InferCsvSchema(@"C:\Work\UMG\optima\FSharp\csv.csv");

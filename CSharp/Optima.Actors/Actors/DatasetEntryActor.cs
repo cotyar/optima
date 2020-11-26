@@ -4,6 +4,7 @@ using Optima.Interfaces;
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Logging;
 using Optima.Domain.DatasetDefinition;
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -12,6 +13,7 @@ namespace Optima.Actors.Actors
     [Actor(TypeName = ActorTypes.DatasetEntry)]
     public class DatasetEntryActor: Actor, IDatasetEntry, IRemindable
     {
+        private readonly ILogger<OwnershipServiceActor> _logger;
         private const string StateName = "dataset_info";
         private ConditionalValue<DatasetInfo> _state;
 
@@ -20,9 +22,11 @@ namespace Optima.Actors.Actors
         /// </summary>
         /// <param name="actorService">The Dapr.Actors.Runtime.ActorService that will host this actor instance.</param>
         /// <param name="actorId">The Dapr.Actors.ActorId for this actor instance.</param>
-        public DatasetEntryActor(ActorService actorService, ActorId actorId)
+        /// <param name="logger"></param>
+        public DatasetEntryActor(ActorService actorService, ActorId actorId, ILogger<OwnershipServiceActor> logger)
             : base(actorService, actorId)
         {
+            _logger = logger;
         }
         
         private Task<ConditionalValue<DatasetInfo>> GetStateAsync() => StateManager.TryGetStateAsync<DatasetInfo>(StateName);
@@ -33,20 +37,8 @@ namespace Optima.Actors.Actors
         /// </summary>
         protected override async Task OnActivateAsync()
         {
-            // Provides opportunity to perform some optional setup.
-            Console.WriteLine($"Activating actor id: {Id}");
             _state = await GetStateAsync();
-            Console.WriteLine($"Loaded state: {_state}");
-        }
-
-        /// <summary>
-        /// This method is called whenever an actor is deactivated after a period of inactivity.
-        /// </summary>
-        protected override Task OnDeactivateAsync()
-        {
-            // Provides Opportunity to perform optional cleanup.
-            Console.WriteLine($"Deactivating actor id: {Id}");
-            return Task.CompletedTask;
+            _logger.LogInformation($"Loaded state: {_state}");
         }
 
         /// <summary>
@@ -107,7 +99,7 @@ namespace Optima.Actors.Actors
         /// </summary>
         public Task UnregisterReminder()
         {
-            Console.WriteLine("Unregistering MyReminder...");
+            _logger.LogInformation("Unregistering MyReminder...");
             return UnregisterReminderAsync("MyReminder");
         }
 
@@ -116,7 +108,7 @@ namespace Optima.Actors.Actors
         // </summary>
         public Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
         {
-            Console.WriteLine("ReceiveReminderAsync is called!");
+            _logger.LogInformation("ReceiveReminderAsync is called!");
             return Task.CompletedTask;
         }
 
@@ -138,7 +130,7 @@ namespace Optima.Actors.Actors
         /// </summary>
         public Task UnregisterTimer()
         {
-            Console.WriteLine("Unregistering MyTimer...");
+            _logger.LogInformation("Unregistering MyTimer...");
             return UnregisterTimerAsync("MyTimer");
         }
 
@@ -147,7 +139,7 @@ namespace Optima.Actors.Actors
         /// </summary>
         private Task OnTimerCallBack(object data)
         {
-            Console.WriteLine("OnTimerCallBack is called!");
+            _logger.LogInformation("OnTimerCallBack is called!");
             return Task.CompletedTask;
         }
     }

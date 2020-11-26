@@ -8,7 +8,6 @@ import public "google/protobuf/timestamp.proto";
 import public "google/protobuf/descriptor.proto";
 
 import public "security.proto";
-import public "ownership.proto";
 
 package dataset;
 
@@ -96,7 +95,7 @@ message DatasetMetadata {
   }
 
   DatasetId                   datasetId   = 1;
-  ownership.DatasetOwner      owner       = 3;
+  security.Principal          owner       = 3;
   security.User               createdBy   = 4;
   google.protobuf.Timestamp   createdAt   = 5; 
   uint32                      size        = 6;
@@ -122,9 +121,7 @@ message Dataset {
   string         name  = 2;
 
   security.Permissions                          permissions             = 200;
-  ownership.DatasetOwner                        owner                   = 201;
-  ownership.DatasetOwnerHistory                 ownershipAudit          = 202;
-  repeated ownership.OwnerAuthorizationResponse ownerAuthorizationAudit = 203;
+  security.User                                 owner                   = 201;
 
   oneof state {
     DatasetInfo  single = 10;

@@ -11,4 +11,10 @@ message UUID {
   string id = 1;
 }
 
+message Result {
+  oneof result {
+    google.protobuf.Empty success = 1;
+    string                failure = 2;
+  }
+} 
 
