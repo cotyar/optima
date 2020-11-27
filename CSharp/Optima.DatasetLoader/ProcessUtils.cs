@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Optima.DatasetLoader
@@ -15,7 +16,7 @@ namespace Optima.DatasetLoader
             process.WaitForExit(); // TODO: Add timeout and required exception handling
         }
         
-        static Task<int> RunAsync(string fileName, string args)
+        public static (Task<int>, Action) RunAsync(string fileName, string args)
         {
             var tcs = new TaskCompletionSource<int>();
 
@@ -33,7 +34,7 @@ namespace Optima.DatasetLoader
 
             process.Start();
 
-            return tcs.Task;
+            return (tcs.Task, () => process.CloseMainWindow());
         }
     }
 }

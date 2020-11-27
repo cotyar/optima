@@ -6,6 +6,7 @@ using Dapr.Actors;
 using Dapr.Actors.Client;
 using Dapr.Actors.Runtime;
 using Microsoft.Extensions.Logging;
+using Optima.Domain.Core;
 using Optima.Domain.DatasetDefinition;
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -19,8 +20,7 @@ namespace Optima.Actors.Actors
         /// </summary>
         /// <param name="actorService">The Dapr.Actors.Runtime.ActorService that will host this actor instance.</param>
         /// <param name="actorId">The Dapr.Actors.ActorId for this actor instance.</param>
-        /// <param name="logger"></param>
-        public DatasetRegistryActor(ActorService actorService, ActorId actorId, ILogger<OwnershipServiceActor> logger)
+        public DatasetRegistryActor(ActorService actorService, ActorId actorId)
             : base(actorService, actorId, "dataset_registry", 
                 () => new RegistryState
                 {
@@ -30,7 +30,7 @@ namespace Optima.Actors.Actors
         {
         }
         
-        public async Task<string> RegisterDataset(DatasetInfo datasetInfo)
+        public async Task<Result> RegisterDataset(DatasetInfo datasetInfo)
         {
             var response = await DatasetEntryActorProxy(datasetInfo.Id).SetDataAsync(datasetInfo);
             Logger.LogInformation($"Added {datasetInfo.Id} with response {response}");

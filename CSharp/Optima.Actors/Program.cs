@@ -31,6 +31,8 @@ namespace Optima.Actors
                             actorRuntime.RegisterActor<DatasetEntryActor>();
                             actorRuntime.RegisterActor<DatasetRegistryActor>();
                             actorRuntime.RegisterActor<SecurityRegistryActor>();
+                            actorRuntime.RegisterActor<DataProviderActor>();
+                            actorRuntime.RegisterActor<DataProviderManagerActor>();
                         })
                         .UseUrls($"http://localhost:{AppChannelHttpPort}/");
                 });

@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Dapr.Actors;
+using Optima.Domain.Core;
 using Optima.Domain.DatasetDefinition;
 
 namespace Optima.Interfaces
 {
     public interface IDatasetEntry : IActor
     {
-        Task<string> SetDataAsync(DatasetInfo data);
+        Task<Result> SetDataAsync(DatasetInfo data);
         Task<DatasetInfo> GetDataAsync();
-        Task<string> DeleteDataAsync();
-        Task RegisterReminder();
-        Task UnregisterReminder();
-        Task RegisterTimer();
-        Task UnregisterTimer();
+        Task<Result> DeleteDataAsync();
+        // Task RegisterReminder();
+        // Task UnregisterReminder();
+        // Task RegisterTimer();
+        // Task UnregisterTimer();
     }
 }

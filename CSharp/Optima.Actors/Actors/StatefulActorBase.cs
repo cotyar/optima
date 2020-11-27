@@ -26,8 +26,8 @@ namespace Optima.Actors.Actors
             _stateName = stateName;
             _emptyStateFactory = emptyStateFactory;
         }
-        
-        private async Task<TState> GetStateAsync()
+
+        protected async Task<TState> GetStateAsync()
         {
             var state = await StateManager.TryGetStateAsync<TState>(_stateName);
             var ret = state.HasValue
