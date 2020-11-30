@@ -8,7 +8,7 @@ namespace Optima.Actors.Actors
 {
     public abstract class StatefulActorBase<TState>: Actor
     {
-        private readonly string _stateName;
+        protected readonly string StateName;
         private readonly Func<TState> _emptyStateFactory;
         protected TState State;
 
@@ -23,13 +23,13 @@ namespace Optima.Actors.Actors
             string stateName, Func<TState> emptyStateFactory)
             : base(actorService, actorId)
         {
-            _stateName = stateName;
+            StateName = stateName;
             _emptyStateFactory = emptyStateFactory;
         }
 
         protected async Task<TState> GetStateAsync()
         {
-            var state = await StateManager.TryGetStateAsync<TState>(_stateName);
+            var state = await StateManager.TryGetStateAsync<TState>(StateName);
             var ret = state.HasValue
                 ? state.Value
                 : _emptyStateFactory();
@@ -37,7 +37,7 @@ namespace Optima.Actors.Actors
             return ret;
         }
 
-        protected Task SetStateAsync() => StateManager.SetStateAsync(_stateName, State);
+        protected Task SetStateAsync() => StateManager.SetStateAsync(StateName, State);
         
         /// <summary>
         /// This method is called whenever an actor is activated.

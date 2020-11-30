@@ -256,3 +256,7 @@ message PersistenceType
   }
 }
 
+message DatasetEndpoint {
+  string url  = 1;
+  uint32 port = 2; 
+}

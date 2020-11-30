@@ -45,8 +45,7 @@ namespace Optima.Actors.Actors
             // Data is saved to configured state store implicitly after each method execution by Actor's runtime.
             // Data can also be saved explicitly by calling this.StateManager.SaveStateAsync();
             // State to be saved must be DataContract serializable.
-            await StateManager.RemoveStateAsync(
-                StateName);  // state name
+            await StateManager.RemoveStateAsync(StateName);  // state name
             
             State = null;
 

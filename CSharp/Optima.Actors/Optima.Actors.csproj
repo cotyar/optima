@@ -5,7 +5,9 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\Optima.DatasetLoader\Optima.DatasetLoader.csproj" />
     <ProjectReference Include="..\Optima.Interfaces\Optima.Interfaces.csproj" />
+    <ProjectReference Include="..\Optima.ProtoGenerator\Optima.ProtoGenerator.csproj" />
   </ItemGroup>
   
   <ItemGroup>

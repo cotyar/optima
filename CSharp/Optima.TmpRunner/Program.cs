@@ -26,12 +26,12 @@ namespace Optima.TmpRunner
         
         static async Task PrintSchema(PersistenceType pt)
         {
-            var dl = await ToDatasetInfo(pt);
+            var datasetInfo = await ToDatasetInfo(pt);
 
             //ProtoFileWriter.WriteMessageDescriptor();
             // Console.WriteLine(await ProtoGenerator.GeneratorHelper.GenerateProto(dl));
 
-            await GenerateProbes(dl, @"C:\Work\UMG\Probs_Generated", modelProbePath: @"../Probes/DatasetProbe", prefix: "DatasetGen_");
+            await GenerateProbes(datasetInfo, @"C:\Work\UMG\Probs_Generated", modelProbePath: @"../Probes/DatasetProbe", prefix: "DatasetGen_");
         }
     }
 }

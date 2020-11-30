@@ -16,13 +16,18 @@ namespace Optima.DatasetLoader
             process.WaitForExit(); // TODO: Add timeout and required exception handling
         }
         
-        public static (Task<int>, Action) RunAsync(string fileName, string args)
+        public static (Task<int>, Func<int, Task>) RunAsync(string folder, string fileName, string args)
         {
             var tcs = new TaskCompletionSource<int>();
 
             var process = new Process
             {
-                StartInfo = { FileName = fileName, Arguments = args },
+                StartInfo =
+                {
+                    WorkingDirectory = folder,
+                    FileName = fileName, 
+                    Arguments = args
+                },
                 EnableRaisingEvents = true
             };
 
@@ -34,7 +39,12 @@ namespace Optima.DatasetLoader
 
             process.Start();
 
-            return (tcs.Task, () => process.CloseMainWindow());
+            return (tcs.Task, timeout => Task.Run(() =>
+            {
+                process.CloseMainWindow();
+                process.WaitForExit(timeout);
+                if (!process.HasExited) process.Kill(true);
+            }));
         }
     }
 }

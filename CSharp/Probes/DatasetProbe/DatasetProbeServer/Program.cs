@@ -227,10 +227,10 @@ namespace CalcProbeServer
             var server = StartServer(PortBase, sourceType, handler);
         
             Console.WriteLine($"Server for Dataset {datasetId} is started on port {port}");
-            Console.WriteLine("Press any key to stop ...");
-            Console.ReadKey();
+            // Console.WriteLine("Press any key to stop ...");
+            // Console.ReadKey();
         
-            ShutdownFlag.SetResult(0);
+            // ShutdownFlag.SetResult(0);
             
             Task.WaitAll(server);
         }
