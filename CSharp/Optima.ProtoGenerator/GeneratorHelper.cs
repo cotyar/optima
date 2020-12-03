@@ -130,7 +130,7 @@ using DatasetSink = {{CsDsNamespace}}.{{RowName}}.DatasetSink;
         public static async Task GenerateProbes(DatasetInfo dataset, string generatedProbesDestination = @"../Probes", string modelProbePath = @"../Probes/CalcProbe", string prefix = "CalcGen_")
         {
             await CopyDirectoryAsync(modelProbePath, 
-                Path.Combine(generatedProbesDestination, prefix + (dataset.Id?.Uid ?? dataset.Name)), 
+                Path.Combine(generatedProbesDestination, prefix + dataset.Name),//(dataset.Id?.Uid ?? dataset.Name)), 
                 new [] {@".*\\bin\\{0,1}.*", @".*\\obj\\{0,1}.*", @"\.idea", @"\.vs.*"},
                 new Dictionary<string, string>
                 {

@@ -224,7 +224,7 @@ namespace CalcProbeServer
                 SupportedSources.rocks => new RocksDatasetSource(path, new DatasetId { Uid = datasetId }),
                 _ => throw new NotImplementedException()
             };
-            var server = StartServer(PortBase, sourceType, handler);
+            var server = StartServer((int) port, sourceType, handler);
         
             Console.WriteLine($"Server for Dataset {datasetId} is started on port {port}");
             // Console.WriteLine("Press any key to stop ...");
