@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Dapr.Actors.AspNetCore\Dapr.Actors.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\src\Dapr.Actors\Dapr.Actors.csproj" />
+    <ProjectReference Include="..\IDemoActor\IDemoActor.csproj" />
+  </ItemGroup>
+
+</Project>

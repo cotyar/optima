@@ -5,17 +5,14 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\Dapr\src\Dapr.Actors.AspNetCore\Dapr.Actors.AspNetCore.csproj" />
+    <ProjectReference Include="..\Dapr\src\Dapr.Actors\Dapr.Actors.csproj" />
+    <ProjectReference Include="..\Dapr\src\Dapr.AspNetCore\Dapr.AspNetCore.csproj" />
     <ProjectReference Include="..\Optima.DatasetLoader\Optima.DatasetLoader.csproj" />
     <ProjectReference Include="..\Optima.Interfaces\Optima.Interfaces.csproj" />
     <ProjectReference Include="..\Optima.ProtoGenerator\Optima.ProtoGenerator.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="Dapr.Actors" Version="0.12.0-preview01" />
-    <PackageReference Include="Dapr.Actors.AspNetCore" Version="0.12.0-preview01" />
-    <PackageReference Include="Dapr.AspNetCore" Version="0.12.0-preview01" />
-  </ItemGroup>
-  
+    
   <ItemGroup>
     <Folder Include="Controllers" />
   </ItemGroup>

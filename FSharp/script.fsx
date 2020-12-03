@@ -19,6 +19,8 @@ f.InferColumnTypes(0, [||], CultureInfo.InvariantCulture, null, true, false)
 
 
 let j = JsonValue.Load ("""C:\Work\UMG\optima\FSharp\json.json""")
+match j with
+| 
 
 
 // let x = [| XDocument.Load("""C:\Work\UMG\optima\FSharp\xml.xml""").Root |] 

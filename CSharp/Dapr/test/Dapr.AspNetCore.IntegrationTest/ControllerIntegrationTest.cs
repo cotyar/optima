@@ -1,0 +1,87 @@
+﻿// ------------------------------------------------------------
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+// ------------------------------------------------------------
+
+namespace Dapr.AspNetCore.IntegrationTest
+{
+    using System.Net.Http;
+    using System.Threading.Tasks;
+    using Dapr.AspNetCore.IntegrationTest.App;
+    using FluentAssertions;
+    using Xunit;
+
+    public class ControllerIntegrationTest
+    {
+        [Fact]
+        public async Task ModelBinder_CanBindFromState()
+        {
+            using (var factory = new AppWebApplicationFactory())
+            {
+                var httpClient = factory.CreateClient();
+                var daprClient = factory.DaprClient;
+
+                await daprClient.SaveStateAsync("testStore", "test", new Widget() { Size = "small", Count = 17, });
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost/controllerwithoutstateentry/test");
+                var response = await httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var widget = await daprClient.GetStateAsync<Widget>("testStore", "test");
+                widget.Count.Should().Be(18);
+            }
+        }
+
+        [Fact]
+        public async Task ModelBinder_CanBindFromState_WithStateEntry()
+        {
+            using (var factory = new AppWebApplicationFactory())
+            {
+                var httpClient = factory.CreateClient();
+                var daprClient = factory.DaprClient;
+
+                await daprClient.SaveStateAsync("testStore", "test", new Widget() { Size = "small", Count = 17, });
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost/controllerwithstateentry/test");
+                var response = await httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var widget = await daprClient.GetStateAsync<Widget>("testStore", "test");
+                widget.Count.Should().Be(18);
+            }
+        }
+
+        [Fact]
+        public async Task ModelBinder_CanBindFromState_WithStateEntryAndCustomKey()
+        {
+            using (var factory = new AppWebApplicationFactory())
+            {
+                var httpClient = factory.CreateClient();
+                var daprClient = factory.DaprClient;
+
+                await daprClient.SaveStateAsync("testStore", "test", new Widget() { Size = "small", Count = 17, });
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost/controllerwithstateentryandcustomkey/test");
+                var response = await httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var widget = await daprClient.GetStateAsync<Widget>("testStore", "test");
+                widget.Count.Should().Be(18);
+            }
+        }
+
+        [Fact]
+        public async Task ModelBinder_CanGetOutOfTheWayWhenTheresNoBinding()
+        {
+            using (var factory = new AppWebApplicationFactory())
+            {
+                var httpClient = factory.CreateClient();
+                var daprClient = factory.DaprClient;
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost/echo-user?name=jimmy");
+                var response = await httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\properties\dapr_managed_netcore.props" />
+
+  <PropertyGroup>
+    <!-- Set Output Path for tests-->
+    <OutputPath>$(RepoRoot)bin\$(Configuration)\test\$(MSBuildProjectName)\</OutputPath>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

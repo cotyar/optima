@@ -14,7 +14,18 @@ namespace Optima.ActorsClient
 {
     class Program
     {
-        private static IDatasetRegistry Proxy = ActorProxy.Create<IDatasetRegistry>(new ActorId("default"), ActorTypes.DatasetRegistry);
+        static Program()
+        {
+            ActorProxy.ConfigureDefaultFactory(factory => {
+                // factory.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                // factory.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                factory.JsonSerializerOptions.Converters.Add(new ProtoMessageConverter());
+            });
+            
+            Proxy = ActorProxy.Create<IDatasetRegistry>(new ActorId("default"), ActorTypes.DatasetRegistry);
+        }
+        
+        private static readonly IDatasetRegistry Proxy;
         
         private static IDatasetEntry EntryProxy(DatasetId datasetId) => ActorProxy.Create<IDatasetEntry>(new ActorId(datasetId.Uid), ActorTypes.DatasetEntry);
         private static IDataProvider ProviderProxy(DatasetId datasetId) => ActorProxy.Create<IDataProvider>(new ActorId(datasetId.Uid), ActorTypes.DataProvider);
