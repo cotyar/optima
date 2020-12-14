@@ -22,7 +22,7 @@ spec:
         image: redis:alpine
         imagePullPolicy: IfNotPresent
         args:
-          - "--requirepass e$h0p0nD@pr"
+          - "--requirepass 0pt$ma$nd@p3r"
         ports:
           - name: http
             containerPort: 6379
