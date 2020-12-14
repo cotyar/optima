@@ -1,19 +1,24 @@
 all: help
 
 dapr: ## Install Dapr into current kubeconfig selected context
-	kubectl apply -f ./dapr/namespace.yaml
+	# Updating Help repos...
+	helm repo add stable https://charts.helm.sh/stable
+	helm repo add dapr https://dapr.github.io/helm-charts/
+	helm repo update
+
+	# Installing Dapr...
+	kubectl create ns optima
+	helm install dapr dapr/dapr --namespace optima --set global.logAsJson=true	
+	
+	# Installing deployments...
 	kubectl apply -f  ./dapr/components/secret.yaml
 	kubectl apply -f  ./dapr/components/redis.yaml
 	kubectl apply -f  ./dapr/components/state.redis.yaml
 	kubectl apply -f  ./dapr/components/zipkin.yaml
 	kubectl apply -f  ./deployment.yaml
 	
+	# Installing monitoring...
 	kubectl create namespace dapr-monitoring
-
-	# Updating Help repos...
-	helm repo add stable https://charts.helm.sh/stable
-	helm repo update
-
 	helm install dapr-prom stable/prometheus -n dapr-monitoring
 	helm install grafana stable/grafana -n dapr-monitoring
 
@@ -42,8 +47,6 @@ install_grafana_dash: ## Create Prometheus data source and import Dapr dashboard
 
 port_forwards: ## Forward observability ports
 	# Forwarding ports: dapr=8081, grafana=8082, zipkin=9412
-	pkill kubectl -9
-
 	kubectl port-forward svc/dapr-dashboard 8081:8080 -n optima  &
 	kubectl port-forward svc/zipkin 9412:9411 -n optima  &
 	kubectl port-forward svc/grafana 8082:80 -n dapr-monitoring  &
