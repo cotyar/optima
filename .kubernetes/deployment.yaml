@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  namespace: optima-dapr
+  namespace: optima
   name: optimaserver
   labels:
     app: optimaserver
@@ -17,7 +17,7 @@ spec:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  namespace: optima-dapr
+  namespace: optima
   name: optimaserver
   labels:
     app: optimaserver
@@ -38,6 +38,7 @@ spec:
         dapr.io/app-port: "80"
         dapr.io/port: "80" # It is a current bug
         dapr.io/log-level: "debug"
+        dapr.io/config: "tracing"
     spec:
       containers:
       - name: optimaserver

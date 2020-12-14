@@ -2,15 +2,17 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: statestore
-  namespace: optima-dapr
+  namespace: optima
 spec:
   type: state.redis
   metadata:
   - name: actorStateStore 
     value: "true"
   - name: redisHost
-    value: redis-master:6379
+    value: redis:6379
   - name: redisPassword
     secretKeyRef:
-      name: redis
-      key: redis-password
+      name: optimasecrets
+      key: redisPassword
+auth:
+  secretStore: kubernetes

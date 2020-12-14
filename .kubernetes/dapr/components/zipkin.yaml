@@ -1,0 +1,74 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: zipkin
+  namespace: optima
+  labels:
+    app: optima
+    service: zipkin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: zipkin
+  template:
+    metadata:
+      labels:
+        app: optima
+        service: zipkin
+    spec:
+      containers:
+        - name: zipkin
+          image: openzipkin/zipkin-slim
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9411
+              protocol: TCP
+              
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: zipkin
+  namespace: optima
+  labels:
+    app: optima
+    service: zipkin
+spec:
+  type: NodePort
+  ports:
+    - port: 9411
+      targetPort: 9411
+      nodePort: 32411
+      protocol: TCP
+      name: zipkin
+  selector:
+    service: zipkin
+
+---
+
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: zipkin
+  namespace: optima
+spec:
+  type: exporters.zipkin
+  metadata:
+  - name: enabled
+    value: "true"
+  - name: exporterAddress
+    value: "http://zipkin:9411/api/v2/spans"
+
+---
+
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: tracing
+  namespace: optima
+spec:
+  tracing:
+    samplingRate: "1"
