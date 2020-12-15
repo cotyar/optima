@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using CalcProbeServer.Storage;
 using Cocona;
 using CsvHelper;
-using Grpc.Core;
+using Generated;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 using Grpc.Core.Utils;
 using Grpc.Reflection;
 using Grpc.Reflection.V1Alpha;
@@ -21,11 +22,11 @@ using Enum = System.Enum;
 
 #region Substituted usings
 // {{#UsingsDs}}
-using Generated;
+
 // {{/UsingsDs}}
 #endregion Substituted usings
 
-namespace CalcProbeServer
+namespace DatasetProbeServer
 {
     public class CsvDatasetSource : DatasetSource.DatasetSourceBase
     {
@@ -48,21 +49,24 @@ namespace CalcProbeServer
             csv.Configuration.HasHeaderRecord = _hasHeader;
             csv.Configuration.Delimiter = _delimiter;
             csv.Configuration.MissingFieldFound = null;
-            var records = request.PagingCase switch
+            try
             {
-                DatasetDataRequest.PagingOneofCase.All => csv.GetRecords<Row>().Select((r, i) => new RowWithLineage { RowNum = (ulong)i, Row = r }).ToArray(),
-                DatasetDataRequest.PagingOneofCase.Page => csv.GetRecords<Row>().Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize).
-                    Select((r, i) => new RowWithLineage { RowNum = (ulong)i + request.Page.StartIndex, Row = r }).ToArray(),
-                DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
-                _ => throw new NotImplementedException()
-            };
-            
-            // foreach (var row in records)
-            // {
-            //     await responseStream.WriteAsync(row);
-            // }
-
-            await responseStream.WriteAllAsync(records);
+                var records = request.PagingCase switch
+                {
+                    DatasetDataRequest.PagingOneofCase.All => csv.GetRecords<Row>().Select((r, i) => new RowWithLineage { RowNum = (ulong)i, Row = r }).ToArray(), // TODO: Remove ToArray-s?
+                    DatasetDataRequest.PagingOneofCase.Page => csv.GetRecords<Row>().Skip((int) request.Page.StartIndex).Take((int) request.Page.PageSize).
+                        Select((r, i) => new RowWithLineage { RowNum = (ulong)i + request.Page.StartIndex, Row = r }).ToArray(),
+                    DatasetDataRequest.PagingOneofCase.None => throw new NotImplementedException(),
+                    _ => throw new NotImplementedException()
+                };
+                
+                await responseStream.WriteAllAsync(records);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e); // TODO: Change to Logger
+                throw new RpcException(new Status(StatusCode.Internal, "Data()", e));
+            }
         }
     }
     
@@ -242,7 +246,8 @@ namespace CalcProbeServer
             {
                 Services =
                 {
-                    DatasetSource.BindService(handler),
+                    // DatasetSource.BindService(handler),
+                    new GrpcTransport<DatasetDataRequest, RowWithLineage>("lin.generated.test1.DatasetSource", handler.Data).ServerServiceDefinition,
                     ServerReflection.BindService(reflectionServiceImpl)
                 },
                 Ports = {new ServerPort("localhost", port, ServerCredentials.Insecure)}
@@ -270,7 +275,7 @@ namespace CalcProbeServer
     internal class SourceSupportedAttribute : ValidationAttribute
     {
         protected override ValidationResult IsValid(object value, ValidationContext validationContext) => 
-            System.Enum.GetNames(typeof(SupportedSources)).Contains((value?.ToString() ?? "").ToLowerInvariant()) 
+            Enum.GetNames(typeof(SupportedSources)).Contains((value?.ToString() ?? "").ToLowerInvariant()) 
                 ? ValidationResult.Success 
                 : new ValidationResult($"The source type '{value}' is not supported.");
     }
