@@ -1,0 +1,54 @@
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: optima
+  name: optimaserver
+  labels:
+    app: optimaserver
+spec:
+  selector:
+    service: optimaserver
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: optima
+  name: optimaserver
+  labels:
+    app: optimaserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: optimaserver
+  template:
+    metadata:
+      labels:
+        app: optimaserver
+        service: optimaserver
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "optimaserver"
+        dapr.io/id: "optimaserver" # It is a current bug
+        dapr.io/app-port: "80"
+        dapr.io/port: "80" # It is a current bug
+        dapr.io/log-level: "debug"
+        dapr.io/config: "tracing"
+    spec:
+      containers:
+      - name: optimaserver
+        image: saddambilalov/optima.actors:1.0.4
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 80
+            protocol: TCP
+        env:
+          - name: DOTNET_RUNNING_IN_CONTAINER
+            value: 'true'
+          - name: DAPR_HTTP_PORT
+            value: '3500'
