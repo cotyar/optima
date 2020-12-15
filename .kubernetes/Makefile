@@ -1,6 +1,6 @@
 all: help
 
-dapr: ## Install Dapr into current kubeconfig selected context
+install: ## Install Dapr into current kubeconfig selected context
 	# Updating Help repos...
 	helm repo add stable https://charts.helm.sh/stable
 	helm repo add dapr https://dapr.github.io/helm-charts/
@@ -15,18 +15,20 @@ dapr: ## Install Dapr into current kubeconfig selected context
 	kubectl apply -f  ./dapr/components/redis.yaml
 	kubectl apply -f  ./dapr/components/state.redis.yaml
 	kubectl apply -f  ./dapr/components/zipkin.yaml
-	kubectl apply -f  ./deployment.yaml
 	
 	# Installing monitoring...
 	kubectl create namespace dapr-monitoring
 	helm install dapr-prom stable/prometheus -n dapr-monitoring
 	helm install grafana stable/grafana -n dapr-monitoring
 
-show_grafana_password: ## Retrieve grafana admin password
+deploy: ## deploy the services
+	kubectl apply -f  ./deployment.yaml
+
+grafana_password: ## Retrieve grafana admin password
 	$(eval GPASS=$(shell kubectl get secret -n dapr-monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode))
 	@echo Grafana admin password is: $(GPASS)
 
-install_grafana_dash: ## Create Prometheus data source and import Dapr dashboards
+grafana_dash: ## Create Prometheus data source and import Dapr dashboards
 	$(eval GPASS=$(shell kubectl get secret -n dapr-monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode))
 	curl -X POST -s -k -u "admin:$(GPASS)" \
 		 -H "Content-Type: application/json" \
@@ -45,7 +47,7 @@ install_grafana_dash: ## Create Prometheus data source and import Dapr dashboard
 		 -d @dapr/grafana/actor-dashboard.json \
 	     http://localhost:8082/api/dashboards/db
 
-port_forwards: ## Forward observability ports
+forward: ## Forward observability ports
 	# Forwarding ports: dapr=8081, grafana=8082, zipkin=9412
 	kubectl port-forward svc/dapr-dashboard 8081:8080 -n optima  &
 	kubectl port-forward svc/zipkin 9412:9411 -n optima  &
@@ -55,9 +57,15 @@ unforward: ## Stop previously forwarded ports
 	pkill kubectl -9
 
 uninstall: ## Removes all the deployments and the helm repository.
+	helm uninstall dapr -n optima
+	helm uninstall dapr-prom -n dapr-monitoring
+	helm uninstall grafana -n dapr-monitoring
+
 	helm repo remove stable
+	helm repo remove dapr
 
 	# kubectl delete ns optima
+	kubectl delete ns optima
 	kubectl delete ns dapr-monitoring
 
 help: ## Display available commands
