@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 all: help
 
 install: ## Install Dapr into current kubeconfig selected context
@@ -21,7 +23,14 @@ install: ## Install Dapr into current kubeconfig selected context
 	helm install dapr-prom stable/prometheus -n dapr-monitoring
 	helm install grafana stable/grafana -n dapr-monitoring
 
-deploy: ## deploy the services
+	# Installing Grafana dashbaords...
+	source install_grafana.sh
+
+	# Deploying the services...
+	kubectl apply -f  ./deployment.yaml
+
+redeploy: ## Re-deploy the services
+	kubectl delete -f  ./deployment.yaml
 	kubectl apply -f  ./deployment.yaml
 
 grafana_password: ## Retrieve grafana admin password
@@ -29,29 +38,14 @@ grafana_password: ## Retrieve grafana admin password
 	@echo Grafana admin password is: $(GPASS)
 
 grafana_dash: ## Create Prometheus data source and import Dapr dashboards
-	$(eval GPASS=$(shell kubectl get secret -n dapr-monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode))
-	curl -X POST -s -k -u "admin:$(GPASS)" \
-		 -H "Content-Type: application/json" \
-		 -d '{ "name":"Dapr", "type":"prometheus", "url":"http://dapr-prom-prometheus-server.dapr-monitoring", "access":"proxy", "basicAuth":false }' \
-	     http://localhost:8082/api/datasources
-	curl -X POST -s -k -u "admin:$(GPASS)" \
-		 -H "Content-Type: application/json" \
-		 -d @dapr/grafana/system-services-dashboard.json \
-	     http://localhost:8082/api/dashboards/db
-	curl -X POST -s -k -u "admin:$(GPASS)" \
-		 -H "Content-Type: application/json" \
-		 -d @dapr/grafana/sidecar-dashboard.json \
-	     http://localhost:8082/api/dashboards/db
-	curl -X POST -s -k -u "admin:$(GPASS)" \
-		 -H "Content-Type: application/json" \
-		 -d @dapr/grafana/actor-dashboard.json \
-	     http://localhost:8082/api/dashboards/db
+	source install_grafana.sh
 
 forward: ## Forward observability ports
 	# Forwarding ports: dapr=8081, grafana=8082, zipkin=9412
 	kubectl port-forward svc/dapr-dashboard 8081:8080 -n optima  &
 	kubectl port-forward svc/zipkin 9412:9411 -n optima  &
 	kubectl port-forward svc/grafana 8082:80 -n dapr-monitoring  &
+	kubectl port-forward deployment/optimaserver 3500:3500 -n optima &
 
 unforward: ## Stop previously forwarded ports 
 	pkill kubectl -9
