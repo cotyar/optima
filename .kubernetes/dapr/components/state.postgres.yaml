@@ -1,0 +1,14 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+  namespace: optima
+spec:
+  type: state.postgresql
+  metadata:
+  - name: connectionString
+    secretKeyRef:
+      name: postgres-conn-secret
+      key: connectionString
+  - name: actorStateStore
+    value: "true"

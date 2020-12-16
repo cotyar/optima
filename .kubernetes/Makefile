@@ -6,16 +6,22 @@ install: ## Install Dapr into current kubeconfig selected context
 	# Updating Help repos...
 	helm repo add stable https://charts.helm.sh/stable
 	helm repo add dapr https://dapr.github.io/helm-charts/
+	helm repo add bitnami https://charts.bitnami.com/bitnami
 	helm repo update
 
 	# Installing Dapr...
 	kubectl create ns optima
-	helm install dapr dapr/dapr --namespace optima --set global.logAsJson=true	
-	
+	helm install dapr dapr/dapr --namespace optima --set global.logAsJson=true
+
+	# Configuring the state store...
+	kubectl apply -f ./dapr/components/postgres.state.secret.yaml
+	helm install postgresql bitnami/postgresql --set existingSecret=postgres-state-secret -n optima
+	kubectl apply -f  ./dapr/components/state.postgres.yaml
+
+	# helm install redis bitnami/redis -n optima
+	# kubectl apply -f  ./dapr/components/state.redis.yaml
+
 	# Installing deployments...
-	kubectl apply -f  ./dapr/components/secret.yaml
-	kubectl apply -f  ./dapr/components/redis.yaml
-	kubectl apply -f  ./dapr/components/state.redis.yaml
 	kubectl apply -f  ./dapr/components/zipkin.yaml
 	
 	# Installing monitoring...
@@ -27,10 +33,10 @@ install: ## Install Dapr into current kubeconfig selected context
 	source install_grafana.sh
 
 	# Deploying the services...
-	kubectl apply -f  ./deployment.yaml
+	# kubectl apply -f  ./deployment.yaml
 
 redeploy: ## Re-deploy the services
-	kubectl delete -f  ./deployment.yaml
+	# kubectl delete -f  ./deployment.yaml
 	kubectl apply -f  ./deployment.yaml
 
 grafana_password: ## Retrieve grafana admin password
@@ -57,6 +63,7 @@ uninstall: ## Removes all the deployments and the helm repository.
 
 	helm repo remove stable
 	helm repo remove dapr
+	helm repo remove bitnami
 
 	# kubectl delete ns optima
 	kubectl delete ns optima
