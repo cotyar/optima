@@ -13,6 +13,9 @@ install: ## Install Dapr into current kubeconfig selected context
 	kubectl create ns optima
 	helm install dapr dapr/dapr --namespace optima --set global.logAsJson=true
 
+	# Installing Keycloak...
+	helm install keyclock --set auth.adminUser=testUser,auth.adminPassword=password bitnami/keycloak -n optima
+
 	# Configuring the state store...
 	kubectl apply -f ./dapr/components/postgres.state.secret.yaml
 	helm install postgresql bitnami/postgresql --set existingSecret=postgres-state-secret -n optima
@@ -58,6 +61,9 @@ unforward: ## Stop previously forwarded ports
 
 uninstall: ## Removes all the deployments and the helm repository.
 	helm uninstall dapr -n optima
+	helm uninstall keyclock -n optima
+	helm uninstall postgresql -n optima
+	# helm uninstall redis -n optima
 	helm uninstall dapr-prom -n dapr-monitoring
 	helm uninstall grafana -n dapr-monitoring
 
