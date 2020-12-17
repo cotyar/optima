@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# This script opens 4 terminal windows.
-
 while [[ $(kubectl get pods -l app.kubernetes.io/name=grafana -n dapr-monitoring -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; 
     do echo "Waiting for Grafana..." && sleep 1; 
 done

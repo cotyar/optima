@@ -14,7 +14,7 @@ install: ## Install Dapr into current kubeconfig selected context
 	helm install dapr dapr/dapr --namespace optima --set global.logAsJson=true
 
 	# Installing Keycloak...
-	helm install keyclock --set auth.adminUser=testUser,auth.adminPassword=password bitnami/keycloak -n optima
+	helm install keyclock -f ./dapr/components/keyclock.yaml bitnami/keycloak -n optima
 
 	# Configuring the state store...
 	kubectl apply -f ./dapr/components/postgres.state.secret.yaml
@@ -36,11 +36,7 @@ install: ## Install Dapr into current kubeconfig selected context
 	source install_grafana.sh
 
 	# Deploying the services...
-	# kubectl apply -f  ./deployment.yaml
-
-redeploy: ## Re-deploy the services
-	# kubectl delete -f  ./deployment.yaml
-	kubectl apply -f  ./deployment.yaml
+	source deploy.sh
 
 grafana_password: ## Retrieve grafana admin password
 	$(eval GPASS=$(shell kubectl get secret -n dapr-monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode))
@@ -50,11 +46,12 @@ grafana_dash: ## Create Prometheus data source and import Dapr dashboards
 	source install_grafana.sh
 
 forward: ## Forward observability ports
-	# Forwarding ports: dapr=8081, grafana=8082, zipkin=9412
+	# Forwarding ports: dapr=8081, grafana=8082, zipkin=9412, keyclock=9080
 	kubectl port-forward svc/dapr-dashboard 8081:8080 -n optima  &
 	kubectl port-forward svc/zipkin 9412:9411 -n optima  &
 	kubectl port-forward svc/grafana 8082:80 -n dapr-monitoring  &
 	kubectl port-forward deployment/optimaserver 3500:3500 -n optima &
+	kubectl port-forward svc/keyclock-keycloak 9080:80 -n optima &
 
 unforward: ## Stop previously forwarded ports 
 	pkill kubectl -9

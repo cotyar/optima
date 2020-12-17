@@ -1,0 +1,3 @@
+auth:
+  adminUser: "testUser"
+  adminPassword: "password"
