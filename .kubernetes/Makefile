@@ -13,6 +13,11 @@ install: ## Install Dapr into current kubeconfig selected context (default: redi
 	# Deploying the services...
 	source ./scripts/deploy.sh
 
+presto: ## Install Presto
+	kubectl apply -f ./presto/namespace.yaml
+	kubectl apply -f ./presto/internal/ --namespace presto
+	kubectl apply -f ./presto/example_presto_v1_cr.yaml --namespace presto
+
 grafana_password: ## Retrieve grafana admin password
 	$(eval GPASS=$(shell kubectl get secret -n dapr-monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode))
 	@echo Grafana admin password is: $(GPASS)
