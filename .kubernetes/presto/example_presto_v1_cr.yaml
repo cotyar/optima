@@ -1,0 +1,62 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: privileged-bootstrap-script
+data:
+  bootstrap.sh: |-
+    touch /i.need.root.txt
+---
+apiVersion: starburstdata.com/v1
+kind: Presto
+metadata:
+  name: example-presto
+spec:
+  nameOverride: example-presto
+  prometheus:
+    enabled: true
+    additionalRules:
+      - pattern: 'presto.execution<name=TaskManager><>FailedTasks.TotalCount'
+        name: 'failed_tasks'
+        type: COUNTER
+  additionalBootstrapScriptVolumes:
+    - configMap:
+        name: privileged-bootstrap-script
+  service:
+    type: NodePort
+    name: example-presto
+  memory:
+    nodeMemoryHeadroom: 1Gi
+  coordinator:
+    cpuRequest: ""
+    memoryAllocation: ""
+  worker:
+    count: 3
+    prestoWorkerShutdownGracePeriodSeconds: 1
+    cpuRequest: ""
+    memoryAllocation: ""
+  # hive:
+  #   awsSecretName: presto-hive-s3-keys
+  #   internalMetastore:
+  #     image:
+  #       pullPolicy: Always
+  #     internalPostgreSql:
+  #       enabled: true
+  #     memory: 0.5Gi
+  #     cpu: 0.1
+  #   additionalProperties: |
+  #     hive.allow-drop-table=true
+  #     hive.non-managed-table-writes-enabled=true
+  additionalCatalogs:
+    tpcds: |
+      connector.name=tpcds
+  additionalEtcPrestoTextFiles:
+    some.text.file: |
+      Hello world
+    another.text.file: Hello world
+  additionalEtcPrestoBinaryFiles:
+    some.binary.file: |
+      aGVsbG8gd29ybGQ=
+
+# kubectl port-forward --address 0.0.0.0 service/example-presto 8080 -n presto
+# java -jar presto.jar --server localhost:8080 --catalog tpcds
+# SELECT * FROM reason LIMIT 10;
