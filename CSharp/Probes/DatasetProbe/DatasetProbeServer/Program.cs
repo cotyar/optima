@@ -4,21 +4,25 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
+using System.Reflection;
 using System.Threading.Tasks;
 using CalcProbeServer.Storage;
 using Cocona;
 using CsvHelper;
 using Generated;
 using Google.Protobuf;
+using Google.Protobuf.Reflection;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Core.Utils;
+using Grpc.Health.V1;
+using Grpc.HealthCheck;
 using Grpc.Reflection;
 using Grpc.Reflection.V1Alpha;
 using LinNet;
 using Optima.Domain.DatasetDefinition;
 using Enum = System.Enum;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 #region Substituted usings
 // {{#UsingsDs}}
@@ -228,7 +232,7 @@ namespace DatasetProbeServer
                 SupportedSources.rocks => new RocksDatasetSource(path, new DatasetId { Uid = datasetId }),
                 _ => throw new NotImplementedException()
             };
-            var server = StartServer((int) port, sourceType, handler);
+            var server = StartServer((int) port, sourceType, handler, "lin.generated.test1.DatasetSource");
         
             Console.WriteLine($"Server for Dataset {datasetId} is started on port {port}");
             // Console.WriteLine("Press any key to stop ...");
@@ -239,20 +243,62 @@ namespace DatasetProbeServer
             Task.WaitAll(server);
         }
 
-        private static Task StartServer(int port, SupportedSources source, DatasetSource.DatasetSourceBase handler) => Task.Run(async () =>
+        private static Task StartServer(int port, SupportedSources source, DatasetSource.DatasetSourceBase handler, string serviceName) => Task.Run(async () =>
         {
-            var reflectionServiceImpl = new ReflectionServiceImpl(DatasetSource.Descriptor, ServerReflection.Descriptor);
+            var protoGetter = typeof(FileDescriptor).GetProperty("Proto", BindingFlags.NonPublic | BindingFlags.Instance);
+            var fileProto = (FileDescriptorProto) protoGetter.GetValue(DatasetProbeReflection.Descriptor);
+            
+            // var txt = JsonFormatter.Default.Format(new FileDescriptorProto(fileProto));
+            // var fileProto2 = JsonParser.Default.Parse<FileDescriptorProto>(txt);
+
+            var newFileProto = fileProto.Clone(); // TODO: Clear Field and re-add field definitions 
+            var bytes = newFileProto.ToByteString();
+
+            IEnumerable<FileDescriptor> Deps(FileDescriptor descriptor)
+            {
+                foreach (var dependency in descriptor.Dependencies)
+                {
+                    foreach (var dep in Deps(dependency))
+                    {
+                        yield return dep;
+                    }
+
+                    yield return dependency;
+                }
+            }
+
+            var deps = DatasetProbeReflection.Descriptor.Dependencies.SelectMany(Deps).Distinct().Concat(new [] {DatasetLineage.Descriptor.File}).
+                Select(d => ((FileDescriptorProto) protoGetter.GetValue(d)).ToByteString()).ToArray();
+
+            var newDatasetProbeReflectionDescriptor = FileDescriptor.BuildFromByteStrings(deps.Concat(new [] {bytes}).ToArray()).Last();
+            var newDataSourceDescriptor = newDatasetProbeReflectionDescriptor.Services[0];
+            
+            var grpcTransport = new GrpcTransport<DatasetDataRequest, RowWithLineage>(serviceName, handler.Data);
+            
+            var serviceDescriptors = new [] {newDataSourceDescriptor, Health.Descriptor, ServerReflection.Descriptor}; // TODO: Replace DatasetSource.Descriptor
+
+            var reflectionServiceImpl = new ReflectionServiceImpl(newDataSourceDescriptor, ServerReflection.Descriptor);
+            var healthServiceImpl = new HealthServiceImpl();
             var server = new Server
             {
                 Services =
                 {
                     // DatasetSource.BindService(handler),
-                    new GrpcTransport<DatasetDataRequest, RowWithLineage>("lin.generated.test1.DatasetSource", handler.Data).ServerServiceDefinition,
+                    grpcTransport.ServerServiceDefinition,
+                    Health.BindService(healthServiceImpl),
                     ServerReflection.BindService(reflectionServiceImpl)
                 },
                 Ports = {new ServerPort("localhost", port, ServerCredentials.Insecure)}
             };
             server.Start();
+            
+            // Mark all services as healthy.
+            foreach (var serviceDescriptor in serviceDescriptors)
+            {
+                healthServiceImpl.SetStatus(serviceDescriptor.FullName, HealthCheckResponse.Types.ServingStatus.Serving);
+            }
+            // Mark overall server status as healthy.
+            healthServiceImpl.SetStatus("", HealthCheckResponse.Types.ServingStatus.Serving);
 
             Console.WriteLine("Server listening on port " + port);
 

@@ -8,7 +8,9 @@
     <ItemGroup>
         <PackageReference Include="Cocona" Version="1.5.0" />
         <PackageReference Include="CsvHelper" Version="16.1.0" />
+        <PackageReference Include="Grpc.HealthCheck" Version="2.34.0" />
         <PackageReference Include="Grpc.Reflection" Version="2.33.1" />
+
         <!--<PackageReference Include="mgholam.fastCSV" Version="2.0.2" />-->
         <PackageReference Include="System.Linq.Async" Version="4.1.1" />
 
