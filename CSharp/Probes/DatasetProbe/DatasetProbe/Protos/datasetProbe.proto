@@ -9,13 +9,13 @@ package lin.generated.test1;
 
 message Row {
     string Date = 1;
-    string Open = 2;
-    string High = 3;
-    string Low = 4;
-    string Close = 5;
-    string Volume = 6;
+    double Open = 2;
+    double High = 3;
+    double Low = 4;
+    double Close = 5;
+    int64  Volume = 6;
     string AdjClose = 7;
-    string Flag = 8;
+    bool   Flag = 8;
 }
 
 service DatasetSource {

@@ -246,12 +246,26 @@ namespace DatasetProbeServer
         private static Task StartServer(int port, SupportedSources source, DatasetSource.DatasetSourceBase handler, string serviceName) => Task.Run(async () =>
         {
             var protoGetter = typeof(FileDescriptor).GetProperty("Proto", BindingFlags.NonPublic | BindingFlags.Instance);
-            var fileProto = (FileDescriptorProto) protoGetter.GetValue(DatasetProbeReflection.Descriptor);
+            var fileProto = (FileDescriptorProto) protoGetter!.GetValue(DatasetProbeReflection.Descriptor);
             
             // var txt = JsonFormatter.Default.Format(new FileDescriptorProto(fileProto));
             // var fileProto2 = JsonParser.Default.Parse<FileDescriptorProto>(txt);
 
-            var newFileProto = fileProto.Clone(); // TODO: Clear Field and re-add field definitions 
+            var fieldProtos = typeof(Row)
+                .GetProperties(BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public)
+                .Select((p, i) => new FieldDescriptorProto
+                {
+                    Name = p.Name,
+                    Number = i + 1,
+                    Label = FieldDescriptorProto.Types.Label.Optional,
+                    Type = p.PropertyType.ToFieldType(),
+                })
+                .ToArray();
+            
+            var newFileProto = fileProto!.Clone(); // TODO: Clear Field and re-add field definitions 
+            var fields = newFileProto.MessageType.First(mt => mt.Name == "Row").Field;
+            fields.Clear();
+            fields.AddRange(fieldProtos);
             var bytes = newFileProto.ToByteString();
 
             IEnumerable<FileDescriptor> Deps(FileDescriptor descriptor)
